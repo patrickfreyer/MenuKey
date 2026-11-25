@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MenuKey: a command palette for every Mac app</title>
+<meta name="description" content="MenuKey is a free command palette for every Mac app. Press ⌥Space, type a few letters, and run any menu command or jump to any folder. A tiny, open-source alternative to Alfred's menu search that also finds windows, menu bar icons and folders.">
+<meta property="og:title" content="MenuKey: a command palette for every Mac app">
+<meta property="og:description" content="Every menu command, one shortcut away. A free, tiny Mac app.">
+<meta property="og:image" content="https://patrickfreyer.github.io/MenuKey/screenshot-dark.png">
+<meta property="og:url" content="https://patrickfreyer.github.io/MenuKey/">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/png" href="icon-256.png">
+<link rel="apple-touch-icon" href="icon-256.png">
+<style>
+  :root {
+    --bg: #f5f5f7;
+    --surface: #ffffff;
+    --text: #1d1d1f;
+    --sub: #6e6e73;
+    --line: rgba(0, 0, 0, 0.08);
+    --accent: #0a74ff;
+    --accent-text: #fff;
+    --kbd: #ffffff;
+    --kbd-border: rgba(0, 0, 0, 0.14);
+    --panel: rgba(255, 255, 255, 0.72);
+    --panel-border: rgba(255, 255, 255, 0.8);
+    --pill: rgba(0, 0, 0, 0.06);
+    --win: rgba(255, 255, 255, 0.75);
+    --stage: radial-gradient(900px 600px at 15% 10%, #a9c6ff 0%, transparent 60%),
+             radial-gradient(800px 600px at 90% 90%, #ffc9ae 0%, transparent 55%),
+             radial-gradient(700px 500px at 80% 0%, #d2c1ff 0%, transparent 55%), #e9ecf5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0b0b0e;
+      --surface: #16161a;
+      --text: #f5f5f7;
+      --sub: #a1a1a6;
+      --line: rgba(255, 255, 255, 0.09);
+      --accent: #2f8bff;
+      --kbd: #26262c;
+      --kbd-border: rgba(255, 255, 255, 0.16);
+      --panel: rgba(30, 30, 36, 0.62);
+      --panel-border: rgba(255, 255, 255, 0.14);
+      --pill: rgba(255, 255, 255, 0.09);
+      --win: rgba(40, 40, 48, 0.8);
+      --stage: radial-gradient(900px 600px at 15% 10%, #5b3df5 0%, transparent 60%),
+               radial-gradient(800px 600px at 90% 90%, #f0704f 0%, transparent 55%),
+               radial-gradient(700px 500px at 80% 0%, #1aa4f0 0%, transparent 55%), #17112f;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+  /* Nav */
+  nav { position: sticky; top: 0; z-index: 10; backdrop-filter: saturate(180%) blur(20px);
+        -webkit-backdrop-filter: saturate(180%) blur(20px);
+        background: color-mix(in srgb, var(--bg) 75%, transparent); border-bottom: 1px solid var(--line); }
+  nav .wrap { display: flex; align-items: center; height: 56px; gap: 12px; }
+  nav .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 17px; color: var(--text); }
+  nav .brand img { width: 28px; height: 28px; }
+  nav .links { margin-left: auto; display: flex; gap: 20px; align-items: center; font-size: 14px; }
+  nav .links a { color: var(--text); }
+  nav .links .btn { padding: 7px 14px; font-size: 14px; }
+
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 13px 22px; border-radius: 999px;
+         font-weight: 600; font-size: 16px; background: var(--accent); color: var(--accent-text); }
+  .btn:hover { text-decoration: none; filter: brightness(1.08); }
+  .btn.ghost { background: var(--pill); color: var(--text); }
+
+  /* Hero */
+  .hero.wrap { text-align: center; padding-top: 72px; padding-bottom: 8px; }
+  .hero img.icon { width: 112px; height: 112px; margin-bottom: 20px; }
+  .hero h1 { font-size: clamp(36px, 6vw, 64px); line-height: 1.05; letter-spacing: -0.03em; font-weight: 700; }
+  .hero p.lead { font-size: clamp(18px, 2.2vw, 22px); color: var(--sub); max-width: 680px; margin: 20px auto 0; }
+  .hero .cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 32px; }
+  .hero .meta { margin-top: 14px; font-size: 13px; color: var(--sub); }
+
+  /* Demo stage */
+  .stage-outer { margin: 32px auto 0; max-width: 1000px; }
+  .stage-box { position: relative; width: 100%; aspect-ratio: 16 / 10; border-radius: 22px; overflow: hidden;
+               background: var(--stage); box-shadow: 0 30px 80px rgba(0, 0, 0, 0.18); border: 1px solid var(--line); }
+  .stage { position: absolute; left: 0; top: 0; width: 820px; height: 512px; transform-origin: 0 0; }
+  .mbar { height: 30px; display: flex; align-items: center; gap: 18px; padding: 0 16px; font-size: 13px; font-weight: 500;
+          background: color-mix(in srgb, var(--panel) 70%, transparent); backdrop-filter: blur(20px); }
+  .mbar b { font-weight: 700; }
+  .mbar .apple { width: 12px; height: 14px; border-radius: 50% 50% 45% 45%; background: currentColor; opacity: .85; }
+  .mbar .right { margin-left: auto; display: flex; gap: 14px; align-items: center; }
+  .mbar .right img { width: 17px; height: 17px; }
+  .appwin { position: absolute; left: 44px; top: 56px; width: 732px; height: 430px; border-radius: 18px;
+            background: var(--win); border: 1px solid var(--panel-border); box-shadow: 0 24px 60px rgba(0,0,0,.25); }
+  .appwin .tl { display: flex; gap: 8px; padding: 18px 18px 0; }
+  .appwin .tl i { width: 12px; height: 12px; border-radius: 50%; display: block; }
+  .appwin .ln { height: 13px; border-radius: 7px; background: var(--pill); margin: 22px 40px 0; }
+  .panel { position: absolute; left: 110px; top: 86px; width: 600px; border-radius: 24px;
+           background: var(--panel); border: 1px solid var(--panel-border);
+           backdrop-filter: blur(36px) saturate(180%); -webkit-backdrop-filter: blur(36px) saturate(180%);
+           box-shadow: 0 34px 90px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.2); overflow: hidden;
+           transition: height .18s ease; }
+  .p-head { height: 64px; display: flex; align-items: center; gap: 12px; padding: 0 18px; }
+  .p-head .aicon { width: 30px; height: 30px; border-radius: 7px; flex: none; box-shadow: 0 2px 6px rgba(0,0,0,.2); }
+  .p-head .q { font-size: 22px; display: flex; align-items: center; min-height: 30px; }
+  .p-head .q .ph { color: var(--sub); opacity: .7; }
+  .caret { width: 2px; height: 26px; background: var(--accent); margin-left: 2px; animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .chips { display: flex; gap: 6px; padding: 0 14px 10px; }
+  .chip { height: 28px; padding: 0 12px; border-radius: 99px; display: flex; align-items: center; font-size: 12px;
+          font-weight: 500; background: var(--pill); transition: background .15s, color .15s; }
+  .chip.on { background: var(--accent); color: #fff; }
+  .p-div { height: 1px; background: var(--line); }
+  .think { height: 36px; display: flex; align-items: center; gap: 8px; padding: 0 18px; font-size: 12.5px; color: var(--sub); }
+  .list { padding: 7px; display: flex; flex-direction: column; gap: 2px; }
+  .row { height: 46px; display: flex; align-items: center; padding: 0 10px; border-radius: 13px;
+         animation: rowIn .22s ease both; }
+  @keyframes rowIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+  .row.sel { background: var(--accent); color: #fff; }
+  .row.press { filter: brightness(0.85); }
+  .row .ico { width: 26px; height: 26px; margin-right: 11px; flex: none; display: flex; }
+  .row .ico svg { width: 26px; height: 26px; }
+  .row .t { font-size: 14px; font-weight: 500; }
+  .row .p { font-size: 11.5px; color: var(--sub); }
+  .row.sel .p { color: rgba(255,255,255,.82); }
+  .row .k { margin-left: auto; font-size: 12px; font-weight: 500; padding: 2px 8px; border-radius: 99px; background: var(--pill); }
+  .row.sel .k { background: rgba(255,255,255,.22); }
+  .hl { color: var(--accent); font-weight: 800; }
+  .row.sel .hl { color: #fff; }
+  .nw { white-space: nowrap; }
+  .caption { text-align: center; color: var(--sub); font-size: 15px; margin-top: 16px; min-height: 24px; }
+
+  /* Sections */
+  section.wrap { padding-top: 88px; }
+  h2 { font-size: clamp(28px, 4vw, 40px); letter-spacing: -0.02em; line-height: 1.1; text-align: center; }
+  .sub2 { text-align: center; color: var(--sub); font-size: 18px; margin: 12px auto 0; max-width: 620px; }
+  .split { display: grid; grid-template-columns: 1.05fr 1fr; gap: 48px; align-items: center; margin-top: 8px; }
+  .split h2, .split .sub2 { text-align: left; margin-left: 0; }
+  .eyebrow { font-size: 14px; font-weight: 600; color: var(--accent); margin-bottom: 10px; }
+  .checks { list-style: none; margin-top: 24px; display: grid; gap: 14px; }
+  .checks li { display: flex; gap: 12px; font-size: 16px; color: var(--sub); }
+  .checks li b { color: var(--text); font-weight: 600; }
+  .checks li::before { content: ""; flex: none; width: 22px; height: 22px; margin-top: 1px; border-radius: 50%;
+    background: var(--accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 12.5l4 4 8-9'/%3E%3C/svg%3E") center / 14px no-repeat; }
+  .aside { margin-top: 22px; font-size: 14px; color: var(--sub); }
+  .folder-stage { border-radius: 22px; padding: 28px 22px; background: var(--stage); border: 1px solid var(--line);
+                  box-shadow: 0 24px 60px rgba(0,0,0,.14); }
+  .folder-stage .panel { position: relative; left: auto; top: auto; width: 100%; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 40px; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 26px; }
+  .card .fi { width: 40px; height: 40px; border-radius: 11px; display: flex; align-items: center; justify-content: center;
+              margin-bottom: 16px; color: #fff; }
+  .card .fi svg { width: 22px; height: 22px; }
+  .card h3 { font-size: 18px; letter-spacing: -0.01em; margin-bottom: 6px; }
+  .card p { color: var(--sub); font-size: 15px; }
+  code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: .92em; background: var(--pill);
+         padding: 1px 6px; border-radius: 6px; }
+
+  .keys { max-width: 640px; margin: 36px auto 0; background: var(--surface); border: 1px solid var(--line); border-radius: 20px; }
+  .keys div { display: flex; align-items: center; gap: 16px; padding: 14px 22px; border-bottom: 1px solid var(--line); font-size: 15px; }
+  .keys div:last-child { border-bottom: 0; }
+  .keys .kk { width: 170px; flex: none; display: flex; gap: 5px; flex-wrap: wrap; }
+  kbd { font-family: inherit; font-size: 13px; font-weight: 600; min-width: 26px; height: 26px; padding: 0 7px;
+        display: inline-flex; align-items: center; justify-content: center; border-radius: 7px;
+        background: var(--kbd); border: 1px solid var(--kbd-border); box-shadow: 0 1px 0 var(--kbd-border); }
+
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 40px; }
+  .steps { counter-reset: s; list-style: none; }
+  .steps li { counter-increment: s; position: relative; padding-left: 40px; margin-bottom: 16px; color: var(--sub); font-size: 15px; }
+  .steps li b { color: var(--text); }
+  .steps li::before { content: counter(s); position: absolute; left: 0; top: 0; width: 26px; height: 26px; border-radius: 50%;
+                      background: var(--accent); color: #fff; font-size: 13px; font-weight: 700;
+                      display: flex; align-items: center; justify-content: center; }
+  section.final.wrap { text-align: center; padding-top: 104px; padding-bottom: 40px; }
+  .final .cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 28px; }
+  footer { border-top: 1px solid var(--line); margin-top: 56px; padding: 28px 0 40px; color: var(--sub); font-size: 13px; }
+  footer .wrap { display: flex; gap: 16px; flex-wrap: wrap; justify-content: space-between; }
+
+  @media (max-width: 860px) {
+    .grid { grid-template-columns: 1fr 1fr; }
+    .two { grid-template-columns: 1fr; }
+    .split { grid-template-columns: 1fr; gap: 32px; }
+  }
+  @media (max-width: 600px) {
+    .wrap { padding: 0 16px; }
+    .grid { grid-template-columns: 1fr; }
+    nav .links .hide-s { display: none; }
+    .hero.wrap { padding-top: 44px; }
+    section.wrap { padding-top: 64px; }
+    .hero img.icon { width: 88px; height: 88px; }
+    .keys .kk { width: 120px; }
+    .keys div { padding: 12px 16px; font-size: 14px; }
+    .stage-box { border-radius: 14px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .row { animation: none; }
+    .caret { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a class="brand" href="#"><img src="icon-256.png" alt="">MenuKey</a>
+    <div class="links">
+      <a class="hide-s" href="#folders">Folders</a>
+      <a class="hide-s" href="#features">Features</a>
+      <a class="hide-s" href="#install">Install</a>
+      <a class="hide-s" href="https://github.com/patrickfreyer/MenuKey">GitHub</a>
+      <a class="btn" href="https://github.com/patrickfreyer/MenuKey/releases/latest/download/MenuKey.zip">Download</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero wrap">
+  <img class="icon" src="icon-256.png" alt="MenuKey app icon">
+  <h1>Every menu command,<br>one shortcut away.</h1>
+  <p class="lead">MenuKey is a free, tiny Mac app. Press <span class="nw"><kbd>⌥</kbd> <kbd>Space</kbd></span> in any app, type a few letters, and run any menu command or jump straight to any folder. It also finds open windows and menu bar icons.</p>
+  <div class="cta">
+    <a class="btn" href="https://github.com/patrickfreyer/MenuKey/releases/latest/download/MenuKey.zip">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12m0 0-5-5m5 5 5-5M5 20h14"/></svg>
+      Download for Mac
+    </a>
+    <a class="btn ghost" href="https://github.com/patrickfreyer/MenuKey">View on GitHub</a>
+  </div>
+  <p class="meta">Version 1.1 · 900 KB · macOS 26 or later · Free and open source</p>
+
+  <div class="stage-outer">
+    <div class="stage-box" id="stageBox" aria-label="Animated demo of MenuKey">
+      <div class="stage" id="stage">
+        <div class="mbar"><div class="apple"></div><b id="mApp">Safari</b><span id="mMenus"></span>
+          <div class="right"><img src="icon-256.png" alt=""><span>Tue 9:41</span></div></div>
+        <div class="appwin"><div class="tl"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div>
+          <div class="ln" style="width:40%;margin-top:30px"></div><div class="ln" style="width:72%"></div><div class="ln" style="width:58%"></div>
+          <div class="ln" style="width:64%"></div><div class="ln" style="width:36%"></div><div class="ln" style="width:68%"></div></div>
+        <div class="panel" id="panel">
+          <div class="p-head"><div class="aicon" id="aIcon"></div><div class="q" id="q"></div></div>
+          <div class="chips" id="chips"></div>
+          <div class="p-div"></div>
+          <div id="think"></div>
+          <div class="list" id="list"></div>
+        </div>
+      </div>
+    </div>
+    <p class="caption" id="caption"></p>
+  </div>
+</header>
+
+<section id="folders" class="wrap">
+  <div class="split">
+    <div>
+      <p class="eyebrow">Folder search</p>
+      <h2>Get to any folder in a few keystrokes.</h2>
+      <p class="sub2">Spotlight searches everything, so the folder you want sits between documents, apps, settings and web suggestions. MenuKey searches only folders, and it learns where you go.</p>
+      <ul class="checks">
+        <li><span><b>Type any part of the name.</b> <code>inv</code> finds <em>Invoices</em>, even three folders deep.</span></li>
+        <li><span><b>Your usual folders come first.</b> MenuKey ranks folders by how often and how recently you open them.</span></li>
+        <li><span><b>Open it where you need it.</b> <kbd>↩</kbd> opens Finder, <kbd>⌘</kbd> <kbd>↩</kbd> opens Terminal or your favourite terminal app.</span></li>
+        <li><span><b>Works from any app.</b> Press <span class="nw"><kbd>⌥</kbd> <kbd>Space</kbd></span>, then <kbd>Tab</kbd> to <em>Folders</em>.</span></li>
+      </ul>
+      <p class="aside">Already use <a href="https://github.com/ajeetdsouza/zoxide">zoxide</a> in the terminal? MenuKey reads its history and adds every jump back, so both get smarter. Type <code>z</code> and a space to go straight to folders.</p>
+    </div>
+    <div class="folder-stage" aria-label="MenuKey folder search showing results for inv">
+      <div class="panel">
+        <div class="p-head"><div class="aicon" style="background:linear-gradient(160deg,#7fd3ff,#1e7bff)"></div><div class="q">inv<span class="caret"></span></div></div>
+        <div class="chips"><div class="chip">All</div><div class="chip">Menus</div><div class="chip">Windows</div><div class="chip">Menu Bar</div><div class="chip on">Folders</div></div>
+        <div class="p-div"></div>
+        <div class="list"><div class="row sel" style="animation:none"><div class="ico"><svg viewBox="0 0 28 28"><path d="M3 8a2 2 0 0 1 2-2h6l2.5 2.5H23a2 2 0 0 1 2 2V21a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="#5ab4f5"/><path d="M3 11h22v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="#7cc8fb"/></svg></div><div><div class="t"><span class="hl">Inv</span>oices</div><div class="p">~/Documents/Finance</div></div><div class="k">⌘↩ Terminal</div></div><div class="row" style="animation:none"><div class="ico"><svg viewBox="0 0 28 28"><path d="M3 8a2 2 0 0 1 2-2h6l2.5 2.5H23a2 2 0 0 1 2 2V21a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="#5ab4f5"/><path d="M3 11h22v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="#7cc8fb"/></svg></div><div><div class="t"><span class="hl">Inv</span>estor updates</div><div class="p">~/Dropbox/Company</div></div></div><div class="row" style="animation:none"><div class="ico"><svg viewBox="0 0 28 28"><path d="M3 8a2 2 0 0 1 2-2h6l2.5 2.5H23a2 2 0 0 1 2 2V21a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="#5ab4f5"/><path d="M3 11h22v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="#7cc8fb"/></svg></div><div><div class="t"><span class="hl">Inv</span>oices 2025</div><div class="p">~/Documents/Finance/Archive</div></div></div><div class="row" style="animation:none"><div class="ico"><svg viewBox="0 0 28 28"><path d="M3 8a2 2 0 0 1 2-2h6l2.5 2.5H23a2 2 0 0 1 2 2V21a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="#5ab4f5"/><path d="M3 11h22v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="#7cc8fb"/></svg></div><div><div class="t"><span class="hl">Inv</span>entory photos</div><div class="p">~/Pictures/Shop</div></div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="features" class="wrap">
+  <h2>More than menu search.</h2>
+  <p class="sub2">A command palette for every Mac app: one panel for the commands, windows, menu bar icons and folders you reach for all day. Press <kbd>Tab</kbd> to narrow it down.</p>
+  <div class="grid">
+    <div class="card">
+      <div class="fi" style="background:linear-gradient(160deg,#7cc8fb,#2f8fe6)"><svg viewBox="0 0 24 24" fill="#fff"><path d="M3 7a2 2 0 0 1 2-2h4.5l2 2H19a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>
+      <h3>Folders, faster than Spotlight</h3>
+      <p>Type a few letters of any folder's name and open it in Finder or Terminal. The folders you use most come first.</p>
+    </div>
+    <div class="card">
+      <div class="fi" style="background:linear-gradient(160deg,#5a94ff,#2c63f5)"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 9h7M7 13h10M7 17h5"/></svg></div>
+      <h3>Every menu, searchable</h3>
+      <p>MenuKey reads the frontmost app's menus, submenus included, in 30–80 ms. Each result shows its keyboard shortcut, so you learn them as you go.</p>
+    </div>
+    <div class="card">
+      <div class="fi" style="background:linear-gradient(160deg,#ffb547,#f07b1f)"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M4 18l5-6 4 3 7-9"/><path d="M15 6h5v5"/></svg></div>
+      <h3>Learns like zoxide</h3>
+      <p>Commands you use often and recently rise to the top. MenuKey also remembers what you typed: if <code>t</code> always ends in <em>New Tab</em>, <code>t</code> puts it first.</p>
+    </div>
+    <div class="card">
+      <div class="fi" style="background:linear-gradient(160deg,#c56cff,#7a3cf0)"><svg viewBox="0 0 24 24" fill="#fff"><path d="M12 2l2.2 6.3L20.5 11l-6.3 2.7L12 20l-2.2-6.3L3.5 11l6.3-2.7z"/></svg></div>
+      <h3>Plain English when nothing matches</h3>
+      <p>Type “make it bigger” and Apple's on-device model finds <em>View › Zoom In</em>. It answers in under a second, runs only as a fallback, and only suggests commands the app really has.</p>
+    </div>
+    <div class="card">
+      <div class="fi" style="background:linear-gradient(160deg,#4fd1c5,#1f9e8f)"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="5" width="13" height="10" rx="2"/><rect x="8" y="9" width="13" height="10" rx="2" fill="#1f9e8f"/></svg></div>
+      <h3>Windows</h3>
+      <p>Search the open windows of every app and jump straight to one. Turn on previews to see a small thumbnail of the selected window.</p>
+    </div>
+    <div class="card">
+      <div class="fi" style="background:linear-gradient(160deg,#8e9aaf,#5b667a)"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M2 8.5a15 15 0 0 1 20 0M5.5 12a10 10 0 0 1 13 0M9 15.5a5 5 0 0 1 6 0"/><circle cx="12" cy="19" r="1.3" fill="#fff"/></svg></div>
+      <h3>Menu bar icons</h3>
+      <p>Open Wi‑Fi, Battery, Control Center or any app's menu bar icon by typing its name, even when it's hidden behind the notch.</p>
+    </div>
+</div>
+  </div>
+</section>
+
+<section class="wrap">
+  <h2>Built for the keyboard.</h2>
+  <p class="sub2">And for touch: every row and filter is a large target you can tap.</p>
+  <div class="keys">
+    <div><span class="kk"><kbd>⌥</kbd><kbd>Space</kbd></span>Open or close MenuKey. You can pick another shortcut.</div>
+    <div><span class="kk"><kbd>↑</kbd><kbd>↓</kbd></span>Move the selection</div>
+    <div><span class="kk"><kbd>Tab</kbd></span>Switch between All, Menus, Windows, Menu Bar and Folders</div>
+    <div><span class="kk"><kbd>↩</kbd></span>Run the selected item</div>
+    <div><span class="kk"><kbd>⌘</kbd><kbd>↩</kbd></span>Open a folder in your terminal instead of Finder</div>
+    <div><span class="kk"><kbd>⌥</kbd><kbd>Space</kbd> ×2</span>Repeat the last command</div>
+    <div><span class="kk"><kbd>esc</kbd></span>Close</div>
+  </div>
+</section>
+
+<section id="install" class="wrap">
+  <h2>Small, private, free.</h2>
+  <div class="two">
+    <div class="card">
+      <h3>Stays on your Mac</h3>
+      <p>MenuKey has no account and no analytics, and makes no network requests. It needs Accessibility permission to read and click menus. Your usage history is one small file in <code>~/Library/Application&nbsp;Support/MenuKey</code>, and the plain-English fallback runs on Apple's on-device model.</p>
+    </div>
+    <div class="card">
+      <h3>Install in a minute</h3>
+      <ol class="steps" style="margin-top:14px">
+        <li><b>Download MenuKey</b>, unzip it, and move it to Applications.</li>
+        <li><b>Open it.</b> MenuKey isn't notarized yet, so the first time, click <em>Open Anyway</em> in System Settings › Privacy &amp; Security.</li>
+        <li><b>Allow it under Accessibility</b> when asked. From then on it starts at login.</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section class="final wrap">
+  <img src="icon-256.png" alt="" width="72" height="72">
+  <h2 style="margin-top:16px">Stop hunting through menus.</h2>
+  <div class="cta">
+    <a class="btn" href="https://github.com/patrickfreyer/MenuKey/releases/latest/download/MenuKey.zip">Download for Mac</a>
+    <a class="btn ghost" href="https://github.com/patrickfreyer/MenuKey">Source on GitHub</a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>MenuKey is free and open source under the MIT license.</span>
+    <span>Made by Patrick Freyer · <a href="https://github.com/patrickfreyer/MenuKey">GitHub</a> · <a href="https://github.com/patrickfreyer/MenuKey/releases">Releases</a></span>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const icons = {
+    menu: `<svg viewBox="0 0 28 28"><rect x="5" y="7" width="18" height="14" rx="3" fill="none" stroke="currentColor" stroke-opacity=".45" stroke-width="1.6"/><rect x="8" y="11" width="9" height="2" rx="1" fill="currentColor" fill-opacity=".45"/><rect x="8" y="15" width="12" height="2" rx="1" fill="currentColor" fill-opacity=".45"/></svg>`,
+    folder: `<svg viewBox="0 0 28 28"><path d="M3 8a2 2 0 0 1 2-2h6l2.5 2.5H23a2 2 0 0 1 2 2V21a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="#5ab4f5"/><path d="M3 11h22v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="#7cc8fb"/></svg>`,
+    mail: `<svg viewBox="0 0 28 28"><rect x="2" y="2" width="24" height="24" rx="6" fill="#2f8fe6"/><path d="M7 10h14v9H7z" fill="#fff"/><path d="M7 10l7 5 7-5" fill="none" stroke="#2f8fe6" stroke-width="1.5"/></svg>`,
+    notes: `<svg viewBox="0 0 28 28"><rect x="2" y="2" width="24" height="24" rx="6" fill="#ffd84a"/><rect x="2" y="2" width="24" height="7" rx="6" fill="#f5c400"/><path d="M7 14h14M7 18h10" stroke="#a88a00" stroke-width="1.6" stroke-linecap="round"/></svg>`,
+    wifi: `<svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 11a13 13 0 0 1 18 0M8.5 14.5a8 8 0 0 1 11 0M12 18a3 3 0 0 1 4 0"/></svg>`,
+    spark: `<svg viewBox="0 0 28 28"><path d="M14 4l2.2 6.3L22 13l-5.8 2.7L14 22l-2.2-6.3L6 13l5.8-2.7z" fill="currentColor"/></svg>`,
+  };
+  const scenes = [
+    { app: "Safari", menus: "File Edit View History Bookmarks Window Help", icon: "linear-gradient(160deg,#5ac8fa,#0a60ff)",
+      query: "tab", scope: 0, caption: "Type a few letters to find any menu command.",
+      rows: [["menu","New Tab","File","⌘T"],["menu","Show All Tabs","View","⇧⌘\\"],["menu","Reopen Last Closed Tab","History","⇧⌘T"],["menu","Close Other Tabs","File","⌥⌘W"]] },
+    { app: "Finder", menus: "File Edit View Go Window Help", icon: "linear-gradient(160deg,#7fd3ff,#1e7bff)",
+      query: "inv", scope: 4, caption: "Jump to any folder. The ones you use most come first.",
+      rows: [["folder","Invoices","~/Documents/Finance","⌘↩ Terminal"],["folder","Investor updates","~/Dropbox/Company",""],["folder","Invoices 2025","~/Documents/Finance/Archive",""]] },
+    { app: "Preview", menus: "File Edit View Go Tools Window Help", icon: "linear-gradient(160deg,#a6e3ff,#3c9df0)",
+      query: "make it bigger", scope: 0, ai: true, caption: "No match? Apple's on-device model works out what you meant.",
+      rows: [["spark","Zoom In","Suggested · View","⌘+"],["spark","Zoom to Fit","Suggested · View","⌘9"]] },
+    { app: "Notes", menus: "File Edit Format View Window Help", icon: "linear-gradient(160deg,#ffe27a,#f5c400)",
+      query: "inbox", scope: 2, caption: "Jump to any open window in any app.",
+      rows: [["mail","Inbox – iCloud","Mail",""],["notes","Inbox zero plan","Notes",""]] },
+    { app: "Notes", menus: "File Edit Format View Window Help", icon: "linear-gradient(160deg,#ffe27a,#f5c400)",
+      query: "wi", scope: 3, caption: "Open any menu bar icon by name.",
+      rows: [["wifi","Wi‑Fi","Menu bar · connected",""]] },
+  ];
+  const chipsNames = ["All", "Menus", "Windows", "Menu Bar", "Folders"];
+  const $ = (id) => document.getElementById(id);
+  const stage = $("stage"), box = $("stageBox");
+  const fit = () => { stage.style.transform = `scale(${box.clientWidth / 820})`; };
+  addEventListener("resize", fit); fit();
+
+  const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+  const esc = (s) => s.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+  const chips = (on) => { $("chips").innerHTML = chipsNames.map((c, i) => `<div class="chip ${i === on ? "on" : ""}">${c}</div>`).join(""); };
+  const setQuery = (t, ph) => { $("q").innerHTML = (t ? esc(t) : `<span class="ph">${ph}</span>`) + `<span class="caret"></span>`; };
+  const hl = (title, q, ai) => {
+    if (ai || !q) return esc(title);
+    const i = title.toLowerCase().indexOf(q.toLowerCase());
+    if (i < 0) return esc(title);
+    return esc(title.slice(0, i)) + `<span class="hl">${esc(title.slice(i, i + q.length))}</span>` + esc(title.slice(i + q.length));
+  };
+  const rows = (s, q, sel = 0) => {
+    $("list").innerHTML = s.rows.map((r, i) =>
+      `<div class="row ${i === sel ? "sel" : ""}"><div class="ico" style="${r[0] === "spark" && i !== sel ? "color:var(--accent)" : ""}">${icons[r[0]]}</div>` +
+      `<div><div class="t">${hl(r[1], q, s.ai)}</div><div class="p">${esc(r[2])}</div></div>` +
+      ((r[3] && (r[0] !== "folder" || i === sel)) ? `<div class="k">${esc(r[3])}</div>` : "") + `</div>`).join("");
+  };
+
+  function show(s, q, withRows) {
+    $("mApp").textContent = s.app;
+    $("mMenus").innerHTML = s.menus.split(" ").map(m => `<span>${m}</span>`).join("&nbsp;&nbsp;&nbsp;&nbsp;");
+    $("aIcon").style.background = s.icon;
+    $("caption").textContent = s.caption;
+    if (withRows) rows(s, q); else $("list").innerHTML = "";
+  }
+
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduce) {
+    const s = scenes[0]; chips(s.scope); setQuery(s.query); show(s, s.query, true); $("think").innerHTML = "";
+    return;
+  }
+
+  async function play() {
+    for (;;) {
+      for (const s of scenes) {
+        chips(0); $("think").innerHTML = ""; show(s, "", false); setQuery("", `Search ${s.app}`);
+        await sleep(700);
+        let typed = "";
+        if (s.prefix) {
+          for (const c of s.prefix) { typed += c; setQuery(typed); await sleep(110); }
+          chips(s.scope); typed = ""; setQuery("", "Jump to a folder"); await sleep(350);
+        } else if (s.scope !== 0) {
+          for (let i = 1; i <= s.scope; i++) { chips(i); await sleep(240); }
+        }
+        for (const c of s.query) {
+          typed += c; setQuery(typed);
+          if (!s.ai && typed.length >= 2) rows(s, typed);
+          await sleep(s.ai ? 70 : 120);
+        }
+        if (s.ai) {
+          $("think").innerHTML = `<div class="think"><span style="color:var(--accent)">✦</span> Looking for “${esc(s.query)}” with Apple Intelligence…</div>`;
+          await sleep(1100);
+          $("think").innerHTML = "";
+        }
+        rows(s, s.query);
+        await sleep(1500);
+        if (s.rows.length > 1) { rows(s, s.query, 1); await sleep(500); rows(s, s.query, 0); await sleep(400); }
+        document.querySelector(".row.sel")?.classList.add("press");
+        await sleep(500);
+      }
+    }
+  }
+  play();
+})();
+</script>
+</body>
+</html>

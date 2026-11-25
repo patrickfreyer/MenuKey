@@ -3,3 +3,6 @@ build/
 *.zip
 .DS_Store
 .swiftpm/
+.claude/
+.wrangler/
+site-dist/

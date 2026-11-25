@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/patrickfreyer/MenuKey/releases/latest"><b>Download for macOS</b></a>
+  <a href="https://github.com/patrickfreyer/MenuKey/releases/latest"><b>Download for macOS</b></a> · <a href="https://menukey.pages.dev">Website</a>
 </p>
 
 ![MenuKey searching Safari's menus for "tab"](docs/screenshot-dark.png)
@@ -88,6 +88,7 @@ A few other scripts:
 
 - `swift Scripts/make-icon.swift` redraws the app icon.
 - `./Scripts/make-mockups.sh` re-renders the README images from `docs/mockup.html` with Chrome.
+- `./Scripts/deploy-site.sh` publishes the website (`docs/index.html`) to Cloudflare Pages at [menukey.pages.dev](https://menukey.pages.dev).
 - `swift Scripts/make-icon.swift sheet out.png` renders the alternative icon designs side by side.
 - `MenuKey.app/Contents/MacOS/MenuKey` with `--dump Finder "new fo"`, `--windows`, `--extras`, `--folders proj` or `--ask Finder "make icons bigger"` prints what MenuKey sees, without the UI.
 
