@@ -1,28 +1,70 @@
 import AppKit
 
-// `MenuKey --dump <app name>` prints the menu items MenuKey sees (for testing).
+// Test modes, no UI:
+//   MenuKey --dump <app> [query]     menu items MenuKey sees (ranked if a query is given)
+//   MenuKey --windows [query]        open windows
+//   MenuKey --extras                 menu bar icons
+//   MenuKey --folders [words…]       folder search (zoxide + Spotlight)
+//   MenuKey --ask <app> <request>    plain-English fallback
 let args = CommandLine.arguments
-if args.count >= 3, args[1] == "--dump" {
-    let name = args[2].lowercased()
-    guard let app = NSWorkspace.shared.runningApplications.first(where: {
-        $0.localizedName?.lowercased() == name || $0.bundleIdentifier?.lowercased() == name
-    }) else {
-        print("No running app named \(args[2])"); exit(1)
+
+@MainActor func printItems(_ items: [SearchItem], _ query: String?, limit: Int = 40) {
+    let list = query.map { Matcher.rank(items, query: $0).map(\.item) } ?? items
+    for e in list.prefix(limit) {
+        print("  \(e.checked ? "✓ " : "")\(e.title)  —  \(e.subtitle)  \(e.shortcut)")
     }
+}
+
+@MainActor func runCLI() -> Bool {
+    guard args.count >= 2 else { return false }
     let start = Date()
-    let entries = MenuScanner.scan(pid: app.processIdentifier, includeAppleMenu: false)
-    print("\(entries.count) items in \(Int(Date().timeIntervalSince(start) * 1000)) ms (AX trusted: \(AXIsProcessTrusted()))")
-    if args.count >= 4 {
-        for e in Matcher.rank(entries, query: args[3], usage: [:]).prefix(10) {
-            print("  \(e.title)  —  \(e.pathString)  \(e.shortcut)")
+    func ms() -> Int { Int(Date().timeIntervalSince(start) * 1000) }
+    func app(_ name: String) -> NSRunningApplication? {
+        NSWorkspace.shared.runningApplications.first {
+            $0.localizedName?.lowercased() == name.lowercased() || $0.bundleIdentifier?.lowercased() == name.lowercased()
         }
-    } else {
-        for e in entries.prefix(40) { print("  \(e.pathString) › \(e.title)  \(e.shortcut)") }
     }
-    exit(0)
+
+    switch args[1] {
+    case "--dump" where args.count >= 3:
+        guard let a = app(args[2]) else { print("No running app named \(args[2])"); exit(1) }
+        let items = MenuScanner.scan(pid: a.processIdentifier, bundleID: a.bundleIdentifier ?? "", includeAppleMenu: false)
+        print("\(items.count) items in \(ms()) ms (AX trusted: \(AXIsProcessTrusted()))")
+        printItems(items, args.count >= 4 ? args[3] : nil)
+    case "--windows":
+        let items = WindowSource.scan(excluding: ProcessInfo.processInfo.processIdentifier)
+        print("\(items.count) windows in \(ms()) ms")
+        printItems(items, args.count >= 3 ? args[2] : nil)
+    case "--extras":
+        let items = MenuExtraSource.scan()
+        print("\(items.count) menu bar icons in \(ms()) ms")
+        printItems(items, nil)
+    case "--folders":
+        let items = FolderSource.search(tokens: Array(args.dropFirst(2)))
+        print("\(items.count) folders in \(ms()) ms (zoxide: \(FolderSource.zoxide ?? "none"))")
+        printItems(items, nil, limit: 15)
+    case "--ask" where args.count >= 4:
+        guard let a = app(args[2]) else { print("No running app named \(args[2])"); exit(1) }
+        let items = MenuScanner.scan(pid: a.processIdentifier, bundleID: a.bundleIdentifier ?? "", includeAppleMenu: false)
+        let request = args[3...].joined(separator: " ")
+        print("AI available: \(Assistant.isAvailable) \(Assistant.unavailableReason)")
+        let sem = DispatchSemaphore(value: 0)
+        var commands: [String] = []
+        Task.detached {
+            commands = await Assistant.guessCommands(for: request, app: a.localizedName ?? "", menus: MenuScanner.topLevelTitles(items))
+            sem.signal()
+        }
+        while sem.wait(timeout: .now() + 0.05) == .timedOut { RunLoop.current.run(until: Date() + 0.05) }
+        print("model said (\(ms()) ms): \(commands)")
+        printItems(Matcher.phraseMatches(commands, in: items), nil)
+    default:
+        return false
+    }
+    return true
 }
 
 MainActor.assumeIsolated {
+    if runCLI() { exit(0) }
     let app = NSApplication.shared
     let delegate = AppDelegate()
     app.delegate = delegate

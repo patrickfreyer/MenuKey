@@ -11,6 +11,14 @@ enum Settings {
         get { UserDefaults.standard.bool(forKey: "includeAppleMenu") }
         set { UserDefaults.standard.set(newValue, forKey: "includeAppleMenu") }
     }
+    static var plainEnglish: Bool {
+        get { UserDefaults.standard.object(forKey: "plainEnglish") as? Bool ?? true }
+        set { UserDefaults.standard.set(newValue, forKey: "plainEnglish") }
+    }
+    static var windowPreviews: Bool {
+        get { UserDefaults.standard.bool(forKey: "windowPreviews") }
+        set { UserDefaults.standard.set(newValue, forKey: "windowPreviews") }
+    }
 }
 
 enum Permissions {
@@ -36,7 +44,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.delegate = self
         statusItem.menu = menu
 
-        HotKey.onPress = { [weak self] in self?.panel.toggle() }
+        HotKey.onPress = { [weak self] in self?.panel.hotKeyPressed() }
+        installEditMenu()
         applyHotKey()
 
         if !AXIsProcessTrusted() { Permissions.requestAccessibility() }
@@ -52,6 +61,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             try? SMAppService.mainApp.register()
         }
         UserDefaults.standard.set(SMAppService.mainApp.status == .enabled, forKey: key)
+    }
+
+    /// Accessory apps have no menu bar, so text-editing shortcuts (⌘A, ⌘C, ⌘V, ⌘Z)
+    /// need a main menu to route through, even an invisible one.
+    private func installEditMenu() {
+        let main = NSMenu()
+        let editItem = NSMenuItem()
+        let edit = NSMenu(title: "Edit")
+        edit.addItem(withTitle: "Undo", action: Selector(("undo:")), keyEquivalent: "z")
+        edit.addItem(withTitle: "Redo", action: Selector(("redo:")), keyEquivalent: "Z")
+        edit.addItem(.separator())
+        edit.addItem(withTitle: "Cut", action: #selector(NSText.cut(_:)), keyEquivalent: "x")
+        edit.addItem(withTitle: "Copy", action: #selector(NSText.copy(_:)), keyEquivalent: "c")
+        edit.addItem(withTitle: "Paste", action: #selector(NSText.paste(_:)), keyEquivalent: "v")
+        edit.addItem(withTitle: "Select All", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
+        editItem.submenu = edit
+        main.addItem(editItem)
+        NSApp.mainMenu = main
     }
 
     private func applyHotKey() {
@@ -91,6 +118,33 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         apple.state = Settings.includeAppleMenu ? .on : .off
         menu.addItem(apple)
 
+        let terms = NSMenuItem(title: "Open Folders In", action: nil, keyEquivalent: "")
+        let termMenu = NSMenu()
+        for t in Terminals.installed {
+            let item = NSMenuItem(title: t.name, action: #selector(pickTerminal(_:)), keyEquivalent: "")
+            item.target = self
+            item.representedObject = t.bundleID
+            item.state = t.bundleID == Terminals.selectedBundleID ? .on : .off
+            termMenu.addItem(item)
+        }
+        termMenu.addItem(.separator())
+        let zinfo = NSMenuItem(title: FolderSource.zoxide == nil ? "zoxide not found, using Spotlight" : "Ranked by zoxide", action: nil, keyEquivalent: "")
+        zinfo.isEnabled = false
+        termMenu.addItem(zinfo)
+        terms.submenu = termMenu
+        menu.addItem(terms)
+
+        let previews = NSMenuItem(title: "Window Previews", action: #selector(togglePreviews), keyEquivalent: "")
+        previews.target = self
+        previews.state = Settings.windowPreviews ? .on : .off
+        menu.addItem(previews)
+
+        let ai = NSMenuItem(title: Assistant.isAvailable ? "Plain-English Search" : "Plain-English Search (\(Assistant.unavailableReason))",
+                            action: Assistant.isAvailable ? #selector(togglePlainEnglish) : nil, keyEquivalent: "")
+        ai.target = self
+        ai.state = Settings.plainEnglish && Assistant.isAvailable ? .on : .off
+        menu.addItem(ai)
+
         let login = NSMenuItem(title: "Launch at Login", action: #selector(toggleLogin), keyEquivalent: "")
         login.target = self
         login.state = SMAppService.mainApp.status == .enabled ? .on : .off
@@ -118,6 +172,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @objc private func toggleApple() { Settings.includeAppleMenu.toggle() }
+
+    @objc private func pickTerminal(_ sender: NSMenuItem) {
+        if let id = sender.representedObject as? String { Terminals.selectedBundleID = id }
+    }
+
+    @objc private func togglePlainEnglish() { Settings.plainEnglish.toggle() }
+
+    @objc private func togglePreviews() {
+        Settings.windowPreviews.toggle()
+        if Settings.windowPreviews && !CGPreflightScreenCaptureAccess() {
+            CGRequestScreenCaptureAccess()
+        }
+    }
 
     @objc private func toggleLogin() {
         do {

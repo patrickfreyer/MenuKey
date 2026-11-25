@@ -1,35 +1,7 @@
 import AppKit
 import ApplicationServices
 
-/// One clickable leaf item in an app's menu bar.
-struct MenuEntry: Identifiable {
-    let id: Int
-    let title: String
-    let path: [String]          // parent menu titles, e.g. ["File", "Open Recent"]
-    let shortcut: String        // e.g. "⇧⌘S"
-    let element: AXUIElement
-
-    let titleKey: [Character]
-    let pathKey: [Character]
-
-    var pathString: String { path.joined(separator: " › ") }
-    var usageKey: String { (path + [title]).joined(separator: "\u{1F}") }
-
-    init(id: Int, title: String, path: [String], shortcut: String, element: AXUIElement) {
-        self.id = id
-        self.title = title
-        self.path = path
-        self.shortcut = shortcut
-        self.element = element
-        self.titleKey = Array(Self.normalize(title))
-        self.pathKey = Array(Self.normalize(path.joined(separator: " ")))
-    }
-
-    static func normalize(_ s: String) -> String {
-        s.folding(options: [.caseInsensitive, .diacriticInsensitive, .widthInsensitive], locale: nil)
-    }
-}
-
+/// Reads the frontmost app's menu bar.
 enum MenuScanner {
     private static let maxDepth = 6
     private static let maxItems = 6000
@@ -41,38 +13,43 @@ enum MenuScanner {
         kAXMenuItemCmdModifiersAttribute,
         kAXMenuItemCmdGlyphAttribute,
         kAXChildrenAttribute,
+        kAXMenuItemMarkCharAttribute,
     ] as CFArray
 
-    /// Walks the menu bar of the given process. Safe to call off the main thread.
-    static func scan(pid: pid_t, includeAppleMenu: Bool) -> [MenuEntry] {
+    /// Safe to call off the main thread.
+    static func scan(pid: pid_t, bundleID: String, includeAppleMenu: Bool) -> [SearchItem] {
         let app = AXUIElementCreateApplication(pid)
         AXUIElementSetMessagingTimeout(app, 1.5)
 
-        guard let bar: AXUIElement = attribute(app, kAXMenuBarAttribute) else { return [] }
-        let tops: [AXUIElement] = attribute(bar, kAXChildrenAttribute) ?? []
-
-        var out: [MenuEntry] = []
-        for (index, top) in tops.enumerated() {
+        guard let bar: AXUIElement = AX.attribute(app, kAXMenuBarAttribute) else { return [] }
+        var out: [SearchItem] = []
+        for (index, top) in AX.children(bar).enumerated() {
             if index == 0 && !includeAppleMenu { continue }
-            let title: String = attribute(top, kAXTitleAttribute) ?? ""
-            guard !title.isEmpty else { continue }
-            let menus: [AXUIElement] = attribute(top, kAXChildrenAttribute) ?? []
-            if let menu = menus.first {
-                walk(menu: menu, path: [title], depth: 1, into: &out)
-            }
+            let title = AX.string(top, kAXTitleAttribute)
+            guard !title.isEmpty, let menu = AX.children(top).first else { continue }
+            walk(menu: menu, path: [title], depth: 1, bundleID: bundleID, into: &out)
         }
         return out
     }
 
-    private static func walk(menu: AXUIElement, path: [String], depth: Int, into out: inout [MenuEntry]) {
-        guard depth <= maxDepth, out.count < maxItems else { return }
-        let items: [AXUIElement] = attribute(menu, kAXChildrenAttribute) ?? []
-
+    /// Top-level menu titles, used as context for the plain-English fallback.
+    static func topLevelTitles(_ items: [SearchItem]) -> [String] {
+        var seen = Set<String>(), out: [String] = []
         for item in items {
+            let top = item.subtitle.components(separatedBy: " › ").first ?? ""
+            if !top.isEmpty, seen.insert(top).inserted { out.append(top) }
+        }
+        return out
+    }
+
+    private static func walk(menu: AXUIElement, path: [String], depth: Int, bundleID: String, into out: inout [SearchItem]) {
+        guard depth <= maxDepth, out.count < maxItems else { return }
+
+        for item in AX.children(menu) {
             guard out.count < maxItems else { return }
             var raw: CFArray?
             guard AXUIElementCopyMultipleAttributeValues(item, itemAttributes, AXCopyMultipleAttributeOptions(rawValue: 0), &raw) == .success,
-                  let values = raw as? [Any], values.count == 6 else { continue }
+                  let values = raw as? [Any], values.count == 7 else { continue }
 
             let title = (values[0] as? String)?.trimmingCharacters(in: .whitespaces) ?? ""
             guard !title.isEmpty else { continue } // separators
@@ -80,7 +57,7 @@ enum MenuScanner {
             let children = (values[5] as? [AXUIElement]) ?? []
 
             if let submenu = children.first {
-                walk(menu: submenu, path: path + [title], depth: depth + 1, into: &out)
+                walk(menu: submenu, path: path + [title], depth: depth + 1, bundleID: bundleID, into: &out)
                 continue
             }
             guard enabled else { continue }
@@ -90,14 +67,20 @@ enum MenuScanner {
                 modifiers: (values[3] as? NSNumber)?.intValue ?? 0,
                 glyph: (values[4] as? NSNumber)?.intValue
             )
-            out.append(MenuEntry(id: out.count, title: title, path: path, shortcut: shortcut, element: item))
+            let mark = (values[6] as? String) ?? ""
+            let fullPath = (path + [title]).joined(separator: "/")
+            out.append(SearchItem(
+                id: "m\(out.count)",
+                kind: .menu,
+                title: title,
+                subtitle: path.joined(separator: " › "),
+                shortcut: shortcut,
+                checked: mark == "✓" || mark == "✔",
+                action: .press(item),
+                frecencyKey: "menu|\(bundleID)|\(fullPath)",
+                order: out.count
+            ))
         }
-    }
-
-    private static func attribute<T>(_ element: AXUIElement, _ name: String) -> T? {
-        var value: CFTypeRef?
-        guard AXUIElementCopyAttributeValue(element, name as CFString, &value) == .success else { return nil }
-        return value as? T
     }
 
     // MARK: - Shortcut formatting
@@ -126,7 +109,7 @@ enum MenuScanner {
         if key == " " { key = "␣" }
         guard !key.isEmpty, key.unicodeScalars.first.map({ $0.value >= 0x20 }) ?? false else { return "" }
 
-        // AX modifier bits: 1 = shift, 2 = option, 4 = control, 8 = NO command
+        // AX modifier bits: 1 = shift, 2 = option, 4 = control, 8 = NO command, 16 = fn
         var s = ""
         if modifiers & 16 != 0 { s += "fn " }
         if modifiers & 4 != 0 { s += "⌃" }

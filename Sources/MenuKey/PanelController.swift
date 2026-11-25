@@ -1,5 +1,5 @@
 import AppKit
-import ApplicationServices
+@preconcurrency import ApplicationServices
 import SwiftUI
 
 /// Borderless, non-activating panel: it takes keyboard focus while the
@@ -24,29 +24,19 @@ final class SearchPanel: NSPanel {
     override var canBecomeMain: Bool { false }
 }
 
-enum Usage {
-    private static let key = "usage"
-
-    static func counts(for bundleID: String) -> [String: Int] {
-        (UserDefaults.standard.dictionary(forKey: key)?[bundleID] as? [String: Int]) ?? [:]
-    }
-
-    static func bump(_ entry: MenuEntry, bundleID: String) {
-        var all = UserDefaults.standard.dictionary(forKey: key) ?? [:]
-        var app = (all[bundleID] as? [String: Int]) ?? [:]
-        app[entry.usageKey, default: 0] += 1
-        all[bundleID] = app
-        UserDefaults.standard.set(all, forKey: key)
-    }
-}
-
 @MainActor
 final class PanelController: NSObject, NSWindowDelegate {
     private let panel = SearchPanel()
     private let model = SearchModel()
+    private let preview = PreviewController()
     private var keyMonitor: Any?
     private var scanToken = 0
     private var topY: CGFloat = 0
+    private var shownAt = Date.distantPast
+
+    /// What ran last, for "press the shortcut twice to repeat".
+    private var lastItem: SearchItem?
+    private var lastBundleID: String?
 
     override init() {
         super.init()
@@ -54,13 +44,24 @@ final class PanelController: NSObject, NSWindowDelegate {
         host.sizingOptions = []
         panel.contentView = host
         panel.delegate = self
-        model.onExecute = { [weak self] in self?.execute($0) }
+        model.onExecute = { [weak self] item, alt in self?.perform(item, alternate: alt) }
         model.onLayoutChange = { [weak self] in self?.relayout() }
+        model.onSelectionChange = { [weak self] in self?.updatePreview() }
     }
 
-    var isVisible: Bool { panel.isVisible }
-
-    func toggle() { panel.isVisible ? hide() : show() }
+    func hotKeyPressed() {
+        if panel.isVisible {
+            // Second press right after opening = repeat the last command.
+            if Date().timeIntervalSince(shownAt) < 0.4, lastItem != nil {
+                hide()
+                repeatLast()
+            } else {
+                hide()
+            }
+        } else {
+            show()
+        }
+    }
 
     func show() {
         guard AXIsProcessTrusted() else {
@@ -73,18 +74,37 @@ final class PanelController: NSObject, NSWindowDelegate {
         model.begin(app: app)
         placeOnActiveScreen()
         panel.makeKeyAndOrderFront(nil)
+        shownAt = Date()
         model.focusTick += 1
         installKeyMonitor()
+        preview.beginSession()
 
         scanToken += 1
         let token = scanToken
         let pid = app.processIdentifier
+        let bundleID = model.bundleID
         let includeApple = Settings.includeAppleMenu
+        let ownPID = ProcessInfo.processInfo.processIdentifier
+
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            let entries = MenuScanner.scan(pid: pid, includeAppleMenu: includeApple)
+            let items = MenuScanner.scan(pid: pid, bundleID: bundleID, includeAppleMenu: includeApple)
             DispatchQueue.main.async {
-                guard let self, token == self.scanToken, self.panel.isVisible else { return }
-                self.model.load(entries)
+                guard let self, token == self.scanToken else { return }
+                self.model.setMenus(items)
+            }
+        }
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            let items = WindowSource.scan(excluding: ownPID)
+            DispatchQueue.main.async {
+                guard let self, token == self.scanToken else { return }
+                self.model.setWindows(items)
+            }
+        }
+        DispatchQueue.global(qos: .utility).async { [weak self] in
+            let items = MenuExtraSource.scan()
+            DispatchQueue.main.async {
+                guard let self, token == self.scanToken else { return }
+                self.model.setExtras(items)
             }
         }
     }
@@ -92,6 +112,7 @@ final class PanelController: NSObject, NSWindowDelegate {
     func hide() {
         guard panel.isVisible else { return }
         scanToken += 1
+        preview.hide()
         panel.orderOut(nil)
         removeKeyMonitor()
         model.reset()
@@ -99,14 +120,57 @@ final class PanelController: NSObject, NSWindowDelegate {
 
     func windowDidResignKey(_ notification: Notification) { hide() }
 
-    private func execute(_ entry: MenuEntry) {
+    // MARK: - Actions
+
+    private func perform(_ item: SearchItem, alternate: Bool) {
+        let query = model.trimmedQuery
         let bundleID = model.bundleID
+        let targetIsTerminal = model.targetIsTerminal
         hide()
-        Usage.bump(entry, bundleID: bundleID)
-        // AXPress can block until a modal dialog the item opens is dismissed,
-        // so never run it on the main thread.
-        DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 0.05) {
-            AXUIElementPerformAction(entry.element, kAXPressAction as CFString)
+        Frecency.shared.record(item.frecencyKey, query: query)
+        lastItem = item
+        lastBundleID = bundleID
+        run(item, alternate: alternate, targetIsTerminal: targetIsTerminal)
+    }
+
+    private func run(_ item: SearchItem, alternate: Bool, targetIsTerminal: Bool) {
+        switch item.action {
+        case .press(let element):
+            // AXPress can block until a dialog the item opens is dismissed,
+            // so never run it on the main thread.
+            DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 0.05) {
+                AXUIElementPerformAction(element, kAXPressAction as CFString)
+            }
+        case .window(let app, let window):
+            DispatchQueue.global(qos: .userInitiated).async { WindowSource.focus(app: app, window: window) }
+        case .folder(let url):
+            // In a terminal, Return opens a terminal window; elsewhere it opens Finder. ⌘Return flips it.
+            FolderSource.open(url, inTerminal: targetIsTerminal != alternate)
+        }
+    }
+
+    private func repeatLast() {
+        guard let item = lastItem else { return }
+        let front = NSWorkspace.shared.frontmostApplication
+        let targetIsTerminal = Terminals.isTerminal(front?.bundleIdentifier)
+        guard item.kind == .menu else {
+            run(item, alternate: false, targetIsTerminal: targetIsTerminal)
+            return
+        }
+        // Menu items belong to one app; re-find it there in case the menu was rebuilt.
+        guard let front, front.bundleIdentifier == lastBundleID else { NSSound.beep(); return }
+        let pid = front.processIdentifier
+        let bundleID = front.bundleIdentifier ?? ""
+        let key = item.frecencyKey
+        DispatchQueue.global(qos: .userInitiated).async {
+            let items = MenuScanner.scan(pid: pid, bundleID: bundleID, includeAppleMenu: true)
+            guard let match = items.first(where: { $0.frecencyKey == key }),
+                  case .press(let element) = match.action else {
+                DispatchQueue.main.async { NSSound.beep() }
+                return
+            }
+            AXUIElementPerformAction(element, kAXPressAction as CFString)
+            DispatchQueue.main.async { Frecency.shared.record(key, query: "") }
         }
     }
 
@@ -116,7 +180,7 @@ final class PanelController: NSObject, NSWindowDelegate {
         let screen = NSScreen.screens.first { NSMouseInRect(NSEvent.mouseLocation, $0.frame, false) }
             ?? NSScreen.main ?? NSScreen.screens[0]
         let vf = screen.visibleFrame
-        topY = vf.maxY - vf.height * 0.22
+        topY = vf.maxY - vf.height * 0.2
         let x = vf.midX - Layout.width / 2
         panel.setFrame(NSRect(x: x, y: topY - model.height, width: Layout.width, height: model.height), display: false)
     }
@@ -124,11 +188,17 @@ final class PanelController: NSObject, NSWindowDelegate {
     private func relayout() {
         let h = model.height
         var f = panel.frame
-        guard abs(f.height - h) > 0.5 else { return }
+        guard abs(f.height - h) > 0.5 else { updatePreview(); return }
         f.origin.y = topY - h
         f.size.height = h
         panel.setFrame(f, display: true)
         panel.invalidateShadow()
+        updatePreview()
+    }
+
+    private func updatePreview() {
+        guard panel.isVisible else { return }
+        preview.show(for: model.selected, beside: panel)
     }
 
     // MARK: - Keys
@@ -137,13 +207,15 @@ final class PanelController: NSObject, NSWindowDelegate {
         removeKeyMonitor()
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
             guard let self, event.window === self.panel else { return event }
-            let ctrl = event.modifierFlags.contains(.control)
+            let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+            let ctrl = flags.contains(.control)
             switch (event.keyCode, ctrl, event.charactersIgnoringModifiers) {
             case (125, _, _), (_, true, "n"), (_, true, "j"): self.model.move(1); return nil
             case (126, _, _), (_, true, "p"), (_, true, "k"): self.model.move(-1); return nil
-            case (121, _, _): self.model.move(Layout.maxVisibleRows); return nil   // page down
-            case (116, _, _): self.model.move(-Layout.maxVisibleRows); return nil  // page up
-            case (36, _, _), (76, _, _): self.model.executeSelected(); return nil
+            case (121, _, _): self.model.move(Layout.maxVisibleRows); return nil
+            case (116, _, _): self.model.move(-Layout.maxVisibleRows); return nil
+            case (48, _, _): self.model.cycleScope(flags.contains(.shift) ? -1 : 1); return nil   // Tab
+            case (36, _, _), (76, _, _): self.model.executeSelected(alternate: flags.contains(.command)); return nil
             case (53, _, _): self.hide(); return nil
             default: return event
             }

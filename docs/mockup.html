@@ -72,6 +72,14 @@
   .appicon { width: 34px; height: 34px; border-radius: 8px; flex: none; box-shadow: 0 2px 6px rgba(0,0,0,.25) }
   .query { font-size: 24px; display: flex; align-items: center; }
   .caret { width: 2px; height: 28px; background: #0a84ff; margin-left: 2px; }
+  .chips { display: flex; gap: 6px; padding: 0 16px 10px; }
+  .chip { height: 32px; padding: 0 14px; border-radius: 99px; display: flex; align-items: center;
+    font-size: 13px; font-weight: 500; background: var(--pill); }
+  .chip.on { background: #0a84ff; color: #fff; }
+  .ico { width: 28px; height: 28px; flex: none; margin-right: 12px; display: flex; align-items: center; justify-content: center; }
+  .ico svg { width: 28px; height: 28px; }
+  .hl { color: #0a84ff; font-weight: 800; }
+  .row.sel .hl { color: #fff; }
   .divider { height: 1px; background: var(--divider); }
   .list { padding: 8px; display: flex; flex-direction: column; gap: 2px; }
   .row { height: 50px; display: flex; align-items: center; padding: 0 12px; border-radius: 14px; }
@@ -101,32 +109,41 @@
       <div class="appicon" id="icon"></div>
       <div class="query" id="query"></div>
     </div>
+    <div class="chips" id="chips"></div>
     <div class="divider"></div>
     <div class="list" id="list"></div>
   </div>
 <script>
+  const icons = {
+    menu: `<svg viewBox="0 0 28 28"><rect x="5" y="7" width="18" height="14" rx="3" fill="none" stroke="currentColor" stroke-opacity=".45" stroke-width="1.6"/><rect x="8" y="11" width="9" height="2" rx="1" fill="currentColor" fill-opacity=".45"/><rect x="8" y="15" width="12" height="2" rx="1" fill="currentColor" fill-opacity=".45"/></svg>`,
+    folder: `<svg viewBox="0 0 28 28"><path d="M3 8a2 2 0 0 1 2-2h6l2.5 2.5H23a2 2 0 0 1 2 2V21a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="#5ab4f5"/><path d="M3 11h22v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="#7cc8fb"/></svg>`,
+    window: `<svg viewBox="0 0 28 28"><rect x="2" y="2" width="24" height="24" rx="6" fill="url(#g1)"/><defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7fd3ff"/><stop offset="1" stop-color="#1e7bff"/></linearGradient></defs><rect x="7" y="8" width="14" height="12" rx="2" fill="#fff" fill-opacity=".9"/></svg>`,
+    extra: `<svg viewBox="0 0 28 28"><rect x="4" y="9" width="18" height="10" rx="3" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="6" y="11" width="11" height="6" rx="1.5" fill="currentColor"/><rect x="23" y="12" width="2" height="4" rx="1" fill="currentColor"/></svg>`,
+    spark: `<svg viewBox="0 0 28 28"><path d="M14 4l2.2 6.3L22 13l-5.8 2.7L14 22l-2.2-6.3L6 13l5.8-2.7z" fill="#0a84ff"/></svg>`,
+  };
   const scenes = {
     dark: {
       app: "Safari", menus: ["File", "Edit", "View", "History", "Bookmarks", "Window", "Help"],
-      icon: "linear-gradient(160deg,#5ac8fa,#0a60ff)", query: "tab",
+      icon: "linear-gradient(160deg,#5ac8fa,#0a60ff)", query: "tab", scope: 0,
       rows: [
-        ["New Tab", "File", "⌘T"],
-        ["Show All Tabs", "View", "⇧⌘\\"],
-        ["Reopen Last Closed Tab", "History", "⇧⌘T"],
-        ["Close Other Tabs", "File", "⌥⌘W"],
-        ["Move Tab to New Window", "Window", ""],
-        ["Pin Tab", "Window", ""],
-        ["Show Next Tab", "Window", "⌃⇥"],
+        ["menu", "New Tab", "File", "⌘T"],
+        ["menu", "Show All Tabs", "View", "⇧⌘\\"],
+        ["menu", "Reopen Last Closed Tab", "History", "⇧⌘T"],
+        ["window", "Tab Groups – Planning", "Safari", ""],
+        ["menu", "Close Other Tabs", "File", "⌥⌘W"],
+        ["menu", "Move Tab to New Window", "Window", ""],
+        ["folder", "tabular-data", "~/Projects", ""],
       ],
     },
     light: {
       app: "Finder", menus: ["File", "Edit", "View", "Go", "Window", "Help"],
-      icon: "linear-gradient(160deg,#7fd3ff,#1e7bff)", query: "new fo",
+      icon: "linear-gradient(160deg,#7fd3ff,#1e7bff)", query: "down", scope: 0,
       rows: [
-        ["New Folder", "File", "⇧⌘N"],
-        ["New Folder with Selection", "File", "⌃⌘N"],
-        ["New Smart Folder", "File", "⌥⌘N"],
-        ["New Finder Window", "File", "⌘N"],
+        ["menu", "Downloads", "Go", "⌥⌘L"],
+        ["folder", "Downloads", "~", ""],
+        ["window", "Downloads", "Finder", ""],
+        ["folder", "downloads-archive", "~/Documents", ""],
+        ["menu", "Download Linked File", "Edit › Services", ""],
       ],
     },
   };
@@ -138,9 +155,13 @@
     `<div class="right"><img src="../Resources/AppIcon.png" style="width:20px;height:20px;margin-top:-2px"><span>Tue 9:41</span></div>`;
   document.getElementById("icon").style.background = s.icon;
   document.getElementById("query").innerHTML = `${s.query}<span class="caret"></span>`;
+  document.getElementById("chips").innerHTML = ["All", "Menus", "Windows", "Menu Bar", "Folders"]
+    .map((c, i) => `<div class="chip ${i === s.scope ? "on" : ""}">${c}</div>`).join("");
+  const hl = (t) => { const i = t.toLowerCase().indexOf(s.query); return i < 0 ? t :
+    t.slice(0, i) + `<span class="hl">${t.slice(i, i + s.query.length)}</span>` + t.slice(i + s.query.length); };
   document.getElementById("list").innerHTML = s.rows.map((r, i) =>
-    `<div class="row ${i === 0 ? "sel" : ""}"><div><div class="t">${r[0]}</div><div class="p">${r[1]}</div></div>` +
-    (r[2] ? `<div class="k">${r[2]}</div>` : "") + `</div>`).join("");
+    `<div class="row ${i === 0 ? "sel" : ""}"><div class="ico">${icons[r[0]]}</div><div><div class="t">${hl(r[1])}</div><div class="p">${r[2]}</div></div>` +
+    (r[3] ? `<div class="k">${r[3]}</div>` : "") + `</div>`).join("");
   document.getElementById("shadow").style.height = document.getElementById("panel").offsetHeight + "px";
 </script>
 </body>
