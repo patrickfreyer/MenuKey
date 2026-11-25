@@ -1,0 +1,147 @@
+<!doctype html>
+<!-- README mockups. Rendered by Scripts/make-mockups.sh: mockup.html#dark and mockup.html#light -->
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  :root {
+    --panel: rgba(28, 28, 34, 0.58);
+    --panel-border: rgba(255, 255, 255, 0.14);
+    --text: #f5f5f7;
+    --sub: rgba(235, 235, 245, 0.6);
+    --pill: rgba(255, 255, 255, 0.09);
+    --divider: rgba(255, 255, 255, 0.1);
+    --win: rgba(40, 40, 48, 0.82);
+    --win-line: rgba(255, 255, 255, 0.07);
+    --bar: rgba(20, 20, 28, 0.45);
+    --bar-text: #fff;
+    --wall: radial-gradient(1200px 800px at 15% 20%, #6d4cff 0%, transparent 60%),
+            radial-gradient(1000px 700px at 85% 85%, #ff7a59 0%, transparent 55%),
+            radial-gradient(900px 600px at 80% 10%, #1fb6ff 0%, transparent 55%),
+            #1b1340;
+  }
+  body.light {
+    --panel: rgba(255, 255, 255, 0.62);
+    --panel-border: rgba(255, 255, 255, 0.7);
+    --text: #1d1d1f;
+    --sub: rgba(60, 60, 67, 0.62);
+    --pill: rgba(0, 0, 0, 0.06);
+    --divider: rgba(0, 0, 0, 0.08);
+    --win: rgba(255, 255, 255, 0.78);
+    --win-line: rgba(0, 0, 0, 0.06);
+    --bar: rgba(255, 255, 255, 0.4);
+    --bar-text: #1d1d1f;
+    --wall: radial-gradient(1200px 800px at 20% 15%, #a7c7ff 0%, transparent 60%),
+            radial-gradient(1000px 700px at 85% 80%, #ffc6a8 0%, transparent 55%),
+            radial-gradient(900px 600px at 75% 10%, #c8b6ff 0%, transparent 55%),
+            #eef0f8;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { width: 1600px; height: 1000px; overflow: hidden; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+    background: var(--wall);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+  }
+  .menubar {
+    height: 34px; display: flex; align-items: center; gap: 22px; padding: 0 20px;
+    background: var(--bar); backdrop-filter: blur(30px); color: var(--bar-text);
+    font-size: 14px; font-weight: 500;
+  }
+  .menubar b { font-weight: 700; }
+  .menubar .right { margin-left: auto; display: flex; gap: 18px; opacity: .9 }
+  .apple { width: 14px; height: 16px; border-radius: 50% 50% 45% 45%; background: currentColor; opacity: .9 }
+  .window {
+    position: absolute; left: 170px; top: 90px; width: 1260px; height: 840px;
+    background: var(--win); border-radius: 22px; border: 1px solid var(--panel-border);
+    box-shadow: 0 30px 80px rgba(0,0,0,.35); overflow: hidden;
+  }
+  .window .top { height: 56px; display: flex; align-items: center; gap: 9px; padding: 0 22px; border-bottom: 1px solid var(--win-line) }
+  .dot { width: 13px; height: 13px; border-radius: 50%; }
+  .window .line { height: 16px; border-radius: 8px; background: var(--win-line); margin: 28px 48px 0; }
+  .panel {
+    position: absolute; left: 460px; top: 190px; width: 680px;
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 26px;
+    backdrop-filter: blur(40px) saturate(180%);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.18);
+  }
+  .shadow { position: absolute; left: 460px; top: 190px; width: 680px; border-radius: 26px;
+    box-shadow: 0 40px 100px rgba(0,0,0,.45); }
+  .head { height: 72px; display: flex; align-items: center; gap: 14px; padding: 0 20px; }
+  .appicon { width: 34px; height: 34px; border-radius: 8px; flex: none; box-shadow: 0 2px 6px rgba(0,0,0,.25) }
+  .query { font-size: 24px; display: flex; align-items: center; }
+  .caret { width: 2px; height: 28px; background: #0a84ff; margin-left: 2px; }
+  .divider { height: 1px; background: var(--divider); }
+  .list { padding: 8px; display: flex; flex-direction: column; gap: 2px; }
+  .row { height: 50px; display: flex; align-items: center; padding: 0 12px; border-radius: 14px; }
+  .row.sel { background: #0a84ff; color: #fff; }
+  .row .t { font-size: 15px; font-weight: 500; }
+  .row .p { font-size: 12px; color: var(--sub); margin-top: 2px }
+  .row.sel .p { color: rgba(255,255,255,.8) }
+  .row .k { margin-left: auto; font: 500 13px -apple-system, BlinkMacSystemFont, sans-serif; letter-spacing: .5px; padding: 3px 8px; border-radius: 99px; background: var(--pill) }
+  .row.sel .k { background: rgba(255,255,255,.2) }
+</style>
+</head>
+<body>
+  <div class="menubar" id="menubar"></div>
+  <div class="window">
+    <div class="top">
+      <div class="dot" style="background:#ff5f57"></div>
+      <div class="dot" style="background:#febc2e"></div>
+      <div class="dot" style="background:#28c840"></div>
+    </div>
+    <div class="line" style="width:40%"></div><div class="line" style="width:70%"></div>
+    <div class="line" style="width:55%"></div><div class="line" style="width:62%"></div>
+    <div class="line" style="width:35%"></div><div class="line" style="width:66%"></div>
+  </div>
+  <div class="shadow" id="shadow"></div>
+  <div class="panel" id="panel">
+    <div class="head">
+      <div class="appicon" id="icon"></div>
+      <div class="query" id="query"></div>
+    </div>
+    <div class="divider"></div>
+    <div class="list" id="list"></div>
+  </div>
+<script>
+  const scenes = {
+    dark: {
+      app: "Safari", menus: ["File", "Edit", "View", "History", "Bookmarks", "Window", "Help"],
+      icon: "linear-gradient(160deg,#5ac8fa,#0a60ff)", query: "tab",
+      rows: [
+        ["New Tab", "File", "⌘T"],
+        ["Show All Tabs", "View", "⇧⌘\\"],
+        ["Reopen Last Closed Tab", "History", "⇧⌘T"],
+        ["Close Other Tabs", "File", "⌥⌘W"],
+        ["Move Tab to New Window", "Window", ""],
+        ["Pin Tab", "Window", ""],
+        ["Show Next Tab", "Window", "⌃⇥"],
+      ],
+    },
+    light: {
+      app: "Finder", menus: ["File", "Edit", "View", "Go", "Window", "Help"],
+      icon: "linear-gradient(160deg,#7fd3ff,#1e7bff)", query: "new fo",
+      rows: [
+        ["New Folder", "File", "⇧⌘N"],
+        ["New Folder with Selection", "File", "⌃⌘N"],
+        ["New Smart Folder", "File", "⌥⌘N"],
+        ["New Finder Window", "File", "⌘N"],
+      ],
+    },
+  };
+  const name = location.hash.slice(1) || "dark";
+  const s = scenes[name];
+  document.body.className = name;
+  document.getElementById("menubar").innerHTML =
+    `<div class="apple"></div><b>${s.app}</b>` + s.menus.map(m => `<span>${m}</span>`).join("") +
+    `<div class="right"><img src="../Resources/AppIcon.png" style="width:20px;height:20px;margin-top:-2px"><span>Tue 9:41</span></div>`;
+  document.getElementById("icon").style.background = s.icon;
+  document.getElementById("query").innerHTML = `${s.query}<span class="caret"></span>`;
+  document.getElementById("list").innerHTML = s.rows.map((r, i) =>
+    `<div class="row ${i === 0 ? "sel" : ""}"><div><div class="t">${r[0]}</div><div class="p">${r[1]}</div></div>` +
+    (r[2] ? `<div class="k">${r[2]}</div>` : "") + `</div>`).join("");
+  document.getElementById("shadow").style.height = document.getElementById("panel").offsetHeight + "px";
+</script>
+</body>
+</html>
