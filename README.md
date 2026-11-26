@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/patrickfreyer/JumpKey/releases/latest"><b>Download for macOS</b></a> · <a href="https://jumpkey.pages.dev">Website</a>
+  <a href="https://github.com/patrickfreyer/JumpKey/releases/latest"><b>Download for macOS</b></a> · <a href="https://jumpkey.white-forest-01f3.workers.dev">Website</a>
 </p>
 
 ![JumpKey searching Safari's menus for "tab"](docs/screenshot-dark.png)
@@ -91,7 +91,7 @@ A few other scripts:
 
 - `swift Scripts/make-icon.swift` redraws the app icon.
 - `./Scripts/make-mockups.sh` re-renders the README images from `docs/mockup.html` with Chrome.
-- `./Scripts/deploy-site.sh` publishes the website (`docs/index.html`) to Cloudflare Pages at [jumpkey.pages.dev](https://jumpkey.pages.dev).
+- `./Scripts/deploy-site.sh` publishes the website (`docs/index.html`) to Cloudflare Workers at [the website](https://jumpkey.white-forest-01f3.workers.dev).
 - `swift Scripts/make-icon.swift sheet out.png` renders the alternative icon designs side by side.
 - `JumpKey.app/Contents/MacOS/JumpKey` with `--dump Finder "new fo"`, `--windows`, `--extras`, `--files invoice` or `--ask Finder "make icons bigger"` prints what JumpKey sees, without the UI.
 
