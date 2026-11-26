@@ -2,16 +2,18 @@ import AppKit
 import ApplicationServices
 
 enum ItemKind: Int {
-    case menu, window, menuExtra, folder
+    case menu, window, menuExtra, folder, file
 }
 
 enum ItemAction {
     case press(AXUIElement)
     case window(app: AXUIElement, window: AXUIElement)
     case folder(URL)
+    case file(URL)
+    case grantFolderAccess
 }
 
-/// One row in the results list: a menu command, a window, a menu bar icon or a folder.
+/// One row in the results list: a menu command, a window, a menu bar icon, a folder or a file.
 struct SearchItem: Identifiable {
     let id: String
     let kind: ItemKind

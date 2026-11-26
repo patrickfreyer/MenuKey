@@ -1,11 +1,12 @@
 import AppKit
 
 // Test modes, no UI:
-//   MenuKey --dump <app> [query]     menu items MenuKey sees (ranked if a query is given)
-//   MenuKey --windows [query]        open windows
-//   MenuKey --extras                 menu bar icons
-//   MenuKey --folders [words…]       folder search (zoxide + Spotlight)
-//   MenuKey --ask <app> <request>    plain-English fallback
+//   JumpKey --dump <app> [query]     menu items JumpKey sees (ranked if a query is given)
+//   JumpKey --windows [query]        open windows
+//   JumpKey --extras                 menu bar icons
+//   JumpKey --files [words…]         file and folder search (zoxide + Spotlight)
+//   JumpKey --folders [words…]       folders only (the "z " mode)
+//   JumpKey --ask <app> <request>    plain-English fallback
 let args = CommandLine.arguments
 
 @MainActor func printItems(_ items: [SearchItem], _ query: String?, limit: Int = 40) {
@@ -39,9 +40,9 @@ let args = CommandLine.arguments
         let items = MenuExtraSource.scan()
         print("\(items.count) menu bar icons in \(ms()) ms")
         printItems(items, nil)
-    case "--folders":
-        let items = FolderSource.search(tokens: Array(args.dropFirst(2)))
-        print("\(items.count) folders in \(ms()) ms (zoxide: \(FolderSource.zoxide ?? "none"))")
+    case "--files", "--folders":
+        let items = FolderSource.search(tokens: Array(args.dropFirst(2)), foldersOnly: args[1] == "--folders")
+        print("\(items.count) results in \(ms()) ms (zoxide: \(FolderSource.zoxide ?? "none"))")
         printItems(items, nil, limit: 15)
     case "--ask" where args.count >= 4:
         guard let a = app(args[2]) else { print("No running app named \(args[2])"); exit(1) }

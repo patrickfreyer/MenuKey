@@ -54,6 +54,7 @@ enum Matcher {
         case .window: return -150
         case .menuExtra: return -250
         case .folder: return -400
+        case .file: return -450
         }
     }
 

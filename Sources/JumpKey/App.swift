@@ -38,8 +38,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var hotKeyFailed = false
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        Migration.fromMenuKeyIfNeeded()
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        statusItem.button?.image = NSImage(systemSymbolName: "filemenu.and.selection", accessibilityDescription: "MenuKey")
+        statusItem.button?.image = NSImage(systemSymbolName: "filemenu.and.selection", accessibilityDescription: "JumpKey")
         let menu = NSMenu()
         menu.delegate = self
         statusItem.menu = menu
@@ -134,6 +135,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         terms.submenu = termMenu
         menu.addItem(terms)
 
+        let files = NSMenuItem(title: "Allow Searching Desktop, Documents & Downloads…", action: #selector(grantFolders), keyEquivalent: "")
+        files.target = self
+        menu.addItem(files)
+
         let previews = NSMenuItem(title: "Window Previews", action: #selector(togglePreviews), keyEquivalent: "")
         previews.target = self
         previews.state = Settings.windowPreviews ? .on : .off
@@ -158,7 +163,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
 
         menu.addItem(.separator())
-        menu.addItem(NSMenuItem(title: "Quit MenuKey", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
+        menu.addItem(NSMenuItem(title: "Quit JumpKey", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
     }
 
     @objc private func searchFromMenu() {
@@ -176,6 +181,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     @objc private func pickTerminal(_ sender: NSMenuItem) {
         if let id = sender.representedObject as? String { Terminals.selectedBundleID = id }
     }
+
+    @objc private func grantFolders() { FolderSource.requestFolderAccess() }
 
     @objc private func togglePlainEnglish() { Settings.plainEnglish.toggle() }
 

@@ -155,7 +155,7 @@
     `<div class="right"><img src="../Resources/AppIcon.png" style="width:20px;height:20px;margin-top:-2px"><span>Tue 9:41</span></div>`;
   document.getElementById("icon").style.background = s.icon;
   document.getElementById("query").innerHTML = `${s.query}<span class="caret"></span>`;
-  document.getElementById("chips").innerHTML = ["All", "Menus", "Windows", "Menu Bar", "Folders"]
+  document.getElementById("chips").innerHTML = ["All", "Menus", "Windows", "Menu Bar", "Files"]
     .map((c, i) => `<div class="chip ${i === s.scope ? "on" : ""}">${c}</div>`).join("");
   const hl = (t) => { const i = t.toLowerCase().indexOf(s.query); return i < 0 ? t :
     t.slice(0, i) + `<span class="hl">${t.slice(i, i + s.query.length)}</span>` + t.slice(i + s.query.length); };

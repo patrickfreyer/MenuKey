@@ -13,9 +13,9 @@ enum Layout {
 }
 
 enum Scope: Int, CaseIterable, Identifiable {
-    case all, menus, windows, menuBar, folders
+    case all, menus, windows, menuBar, files
     var id: Int { rawValue }
-    var label: String { ["All", "Menus", "Windows", "Menu Bar", "Folders"][rawValue] }
+    var label: String { ["All", "Menus", "Windows", "Menu Bar", "Files"][rawValue] }
 }
 
 @MainActor
@@ -24,6 +24,10 @@ final class SearchModel: ObservableObject {
     @Published var scope: Scope = .all { didSet { if scope != oldValue { scopeChanged() } } }
     @Published private(set) var results: [SearchItem] = []
     @Published var selection = 0 { didSet { onSelectionChange?() } }
+    /// True once the user picks a row with the arrow keys. Only then do late
+    /// results (files, windows) keep the selection where it is; otherwise the
+    /// top result stays selected as results arrive.
+    private var userChoseSelection = false
     @Published private(set) var loading = false
     @Published private(set) var thinking = false
     @Published private(set) var appName = ""
@@ -31,6 +35,8 @@ final class SearchModel: ObservableObject {
     @Published var focusTick = 0
 
     private(set) var bundleID = ""
+    /// Set by the "z " prefix: zoxide-style folder jumping, no files.
+    @Published private(set) var foldersOnly = false
     private(set) var targetIsTerminal = false
 
     var onExecute: ((SearchItem, Bool) -> Void)?
@@ -63,8 +69,8 @@ final class SearchModel: ObservableObject {
     var emptyMessage: String {
         if loading { return "Reading menus…" }
         switch scope {
-        case .folders where FolderSource.zoxide == nil && trimmedQuery.isEmpty: return "Type to search folders"
-        case .folders where trimmedQuery.isEmpty: return "No folders yet. Use z in your terminal or search by name"
+        case .files where trimmedQuery.isEmpty: return foldersOnly ? "Type part of a folder's name" : "Type part of a file or folder name"
+        case .files: return foldersOnly ? "No matching folders" : "No matching files or folders"
         case .windows: return trimmedQuery.isEmpty ? "No open windows" : "No matching windows"
         case .menuBar: return trimmedQuery.isEmpty ? "No menu bar icons found" : "No matching menu bar icons"
         default: return trimmedQuery.isEmpty ? "No menu items" : "No matches"
@@ -85,6 +91,7 @@ final class SearchModel: ObservableObject {
         folderToken += 1
         query = ""
         scope = .all
+        foldersOnly = false
         results = []
         selection = 0
         loading = true
@@ -108,10 +115,12 @@ final class SearchModel: ObservableObject {
     // MARK: Filtering
 
     private func queryChanged() {
+        userChoseSelection = false
         if query.hasPrefix("z ") {
             // zoxide muscle memory: "z proj" jumps straight into folder search.
             // Deferred so the text field sees the change.
-            scope = .folders
+            foldersOnly = true
+            scope = .files
             DispatchQueue.main.async { [weak self] in
                 guard let self, self.query.hasPrefix("z ") else { return }
                 self.query = String(self.query.dropFirst(2))
@@ -126,6 +135,8 @@ final class SearchModel: ObservableObject {
     }
 
     private func scopeChanged() {
+        userChoseSelection = false
+        if scope != .files { foldersOnly = false }
         refilter()
         scheduleFolderSearch()
         focusTick += 1
@@ -152,12 +163,15 @@ final class SearchModel: ObservableObject {
         case .menus: ranked = Matcher.rank(menus, query: q)
         case .windows: ranked = Matcher.rank(windows, query: q)
         case .menuBar: ranked = Matcher.rank(extras, query: q)
-        case .folders:
-            // zoxide/Spotlight order, with folders you've opened through MenuKey first.
+        case .files:
+            // zoxide/Spotlight order, with items you've opened through JumpKey first.
             let f = Frecency.shared
             ranked = folders
                 .map { Matcher.Scored(item: $0, score: Int(f.score($0.frecencyKey) * 100) - $0.order, strong: true) }
                 .sorted { $0.score > $1.score }
+            if !FolderSource.askedForFolderAccess {
+                ranked.insert(Matcher.Scored(item: FolderSource.accessRow, score: .max, strong: true), at: 0)
+            }
         }
 
         let hasStrongMenu = ranked.contains { $0.strong && $0.item.kind == .menu }
@@ -168,7 +182,7 @@ final class SearchModel: ObservableObject {
         }
         results = items
 
-        if keepSelection, let previous, let idx = results.firstIndex(where: { $0.id == previous }) {
+        if keepSelection, userChoseSelection, let previous, let idx = results.firstIndex(where: { $0.id == previous }) {
             selection = idx
         } else {
             selection = 0
@@ -181,18 +195,19 @@ final class SearchModel: ObservableObject {
 
     private func scheduleFolderSearch() {
         let q = trimmedQuery
-        guard scope == .folders || (scope == .all && q.count >= 2) else {
+        guard scope == .files || (scope == .all && q.count >= 2) else {
             if !folders.isEmpty { folders = []; refilter(keepSelection: true) }
             return
         }
         folderToken += 1
         let token = folderToken
         let tokens = q.split(separator: " ").map(String.init)
-        let limit = scope == .folders ? 40 : 6
+        let limit = scope == .files ? 40 : 6
+        let foldersOnly = self.foldersOnly
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) { [weak self] in
             guard let self, token == self.folderToken else { return }
             DispatchQueue.global(qos: .userInitiated).async {
-                let items = FolderSource.search(tokens: tokens, limit: limit)
+                let items = FolderSource.search(tokens: tokens, foldersOnly: foldersOnly, limit: limit)
                 DispatchQueue.main.async {
                     guard token == self.folderToken else { return }
                     self.folders = items
@@ -232,6 +247,7 @@ final class SearchModel: ObservableObject {
     func move(_ delta: Int) {
         guard !results.isEmpty else { return }
         selection = (selection + delta + results.count) % results.count
+        userChoseSelection = true
     }
 
     func executeSelected(alternate: Bool = false) {
@@ -239,8 +255,12 @@ final class SearchModel: ObservableObject {
         onExecute?(item, alternate)
     }
 
-    func folderHint() -> String {
-        targetIsTerminal ? "⌘↩ Finder" : "⌘↩ \(Terminals.selectedName)"
+    func hint(for kind: ItemKind) -> String {
+        switch kind {
+        case .folder: return targetIsTerminal ? "⌘↩ Finder" : "⌘↩ \(Terminals.selectedName)"
+        case .file: return "⌘↩ Show in Finder"
+        default: return ""
+        }
     }
 }
 
@@ -294,7 +314,7 @@ struct SearchView: View {
         case .menus: return "Search \(model.appName) menus"
         case .windows: return "Search open windows"
         case .menuBar: return "Search menu bar icons"
-        case .folders: return "Jump to a folder"
+        case .files: return model.foldersOnly ? "Jump to a folder" : "Search files and folders"
         }
     }
 
@@ -341,7 +361,7 @@ struct SearchView: View {
                 LazyVStack(spacing: Layout.rowSpacing) {
                     ForEach(Array(model.results.enumerated()), id: \.element.id) { index, item in
                         ResultRow(item: item, query: model.trimmedQuery, selected: index == model.selection,
-                                  folderHint: model.folderHint())
+                                  hint: model.hint(for: item.kind))
                             .id(item.id)
                             .onTapGesture {
                                 model.selection = index
@@ -367,7 +387,7 @@ private struct ResultRow: View {
     let item: SearchItem
     let query: String
     let selected: Bool
-    let folderHint: String
+    let hint: String
 
     var body: some View {
         HStack(spacing: 12) {
@@ -419,8 +439,8 @@ private struct ResultRow: View {
     }
 
     @ViewBuilder private var trailing: some View {
-        if item.kind == .folder && selected {
-            Text(folderHint)
+        if (item.kind == .folder || item.kind == .file) && selected {
+            Text(hint)
                 .font(.system(size: 12, weight: .medium))
                 .foregroundStyle(.white.opacity(0.85))
         } else if !item.shortcut.isEmpty {

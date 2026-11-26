@@ -2,12 +2,12 @@
 import PackageDescription
 
 let package = Package(
-    name: "MenuKey",
+    name: "JumpKey",
     platforms: [.macOS(.v26)],
     targets: [
         .executableTarget(
-            name: "MenuKey",
-            path: "Sources/MenuKey",
+            name: "JumpKey",
+            path: "Sources/JumpKey",
             swiftSettings: [.swiftLanguageMode(.v5)]
         )
     ]

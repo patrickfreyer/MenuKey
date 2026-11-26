@@ -1,0 +1,8 @@
+// The JumpKey website: static files only, served by Cloudflare Workers (static assets).
+// Deploy with ./Scripts/deploy-site.sh, which builds site-dist/ first.
+{
+  "name": "jumpkey",
+  "compatibility_date": "2026-11-20",
+  "account_id": "116092b8ab67eb99b520552e6655f045",
+  "assets": { "directory": "./site-dist" }
+}

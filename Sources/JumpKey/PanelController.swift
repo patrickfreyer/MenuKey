@@ -127,6 +127,10 @@ final class PanelController: NSObject, NSWindowDelegate {
         let bundleID = model.bundleID
         let targetIsTerminal = model.targetIsTerminal
         hide()
+        if case .grantFolderAccess = item.action {
+            run(item, alternate: alternate, targetIsTerminal: targetIsTerminal)
+            return
+        }
         Frecency.shared.record(item.frecencyKey, query: query)
         lastItem = item
         lastBundleID = bundleID
@@ -146,6 +150,11 @@ final class PanelController: NSObject, NSWindowDelegate {
         case .folder(let url):
             // In a terminal, Return opens a terminal window; elsewhere it opens Finder. ⌘Return flips it.
             FolderSource.open(url, inTerminal: targetIsTerminal != alternate)
+        case .grantFolderAccess:
+            FolderSource.requestFolderAccess()
+        case .file(let url):
+            // Return opens the file in its app; ⌘Return shows it in Finder.
+            if alternate { FolderSource.reveal(url) } else { NSWorkspace.shared.open(url) }
         }
     }
 

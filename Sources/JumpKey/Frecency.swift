@@ -2,7 +2,7 @@ import Foundation
 
 /// zoxide-style frecency: every use adds 1 to an item's rank, the score is the
 /// rank weighted by how recently it was used, and old ranks decay once the
-/// total grows past a cap. On top of that, MenuKey remembers which queries led
+/// total grows past a cap. On top of that, JumpKey remembers which queries led
 /// to each item, so "t" can come to mean "New Tab".
 @MainActor
 final class Frecency {
@@ -20,7 +20,7 @@ final class Frecency {
 
     private init() {
         let dir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("MenuKey", isDirectory: true)
+            .appendingPathComponent("JumpKey", isDirectory: true)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         url = dir.appendingPathComponent("frecency.json")
         if let data = try? Data(contentsOf: url),

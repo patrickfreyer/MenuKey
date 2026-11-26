@@ -118,7 +118,7 @@ enum MenuExtraSource {
         let running = NSWorkspace.shared.runningApplications
         let ownName = ProcessInfo.processInfo.processName
         for var f in found.sorted(by: { $0.x > $1.x }) {
-            guard seenX.insert(f.x).inserted, f.name != ownName, f.name != "MenuKey" else { continue }
+            guard seenX.insert(f.x).inserted, f.name != ownName, f.name != "JumpKey" else { continue }
             // Only rename icons whose label isn't already an app name, and never
             // attribute them to Apple's hosting processes (Siri hosts Spotlight, etc.).
             let labelIsApp = running.contains { $0.localizedName == f.name }

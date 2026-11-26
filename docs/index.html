@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>MenuKey: a command palette for every Mac app</title>
-<meta name="description" content="MenuKey is a free command palette for every Mac app. Press ⌥Space, type a few letters, and run any menu command or jump to any folder. A tiny, open-source alternative to Alfred's menu search that also finds windows, menu bar icons and folders.">
-<meta property="og:title" content="MenuKey: a command palette for every Mac app">
+<title>JumpKey: a free Spotlight alternative for Mac</title>
+<meta name="description" content="Press Option-Space in any Mac app and type. JumpKey finds menu commands, open windows, menu bar icons, files and folders. Free, open source, runs on device.">
+<meta property="og:title" content="JumpKey: a free Spotlight alternative for Mac">
 <meta property="og:description" content="Every menu command, one shortcut away. A free, tiny Mac app.">
-<meta property="og:image" content="https://patrickfreyer.github.io/MenuKey/screenshot-dark.png">
-<meta property="og:url" content="https://patrickfreyer.github.io/MenuKey/">
+<meta property="og:image" content="https://patrickfreyer.github.io/JumpKey/screenshot-dark.png">
+<meta property="og:url" content="https://patrickfreyer.github.io/JumpKey/">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" type="image/png" href="icon-256.png">
 <link rel="apple-touch-icon" href="icon-256.png">
@@ -179,6 +179,13 @@
   .steps li::before { content: counter(s); position: absolute; left: 0; top: 0; width: 26px; height: 26px; border-radius: 50%;
                       background: var(--accent); color: #fff; font-size: 13px; font-weight: 700;
                       display: flex; align-items: center; justify-content: center; }
+  .faq { max-width: 720px; margin: 32px auto 0; }
+  .faq details { border-bottom: 1px solid var(--line); padding: 18px 4px; }
+  .faq summary { cursor: pointer; font-size: 17px; font-weight: 600; list-style: none; display: flex; justify-content: space-between; gap: 16px; }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary::after { content: "+"; color: var(--sub); font-weight: 400; font-size: 22px; line-height: 1; }
+  .faq details[open] summary::after { content: "–"; }
+  .faq p { color: var(--sub); font-size: 15px; margin-top: 10px; }
   section.final.wrap { text-align: center; padding-top: 104px; padding-bottom: 40px; }
   .final .cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 28px; }
   footer { border-top: 1px solid var(--line); margin-top: 56px; padding: 28px 0 40px; color: var(--sub); font-size: 13px; }
@@ -205,37 +212,38 @@
     .caret { animation: none; }
   }
 </style>
+<script type="application/ld+json">[{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "JumpKey", "applicationCategory": "UtilitiesApplication", "operatingSystem": "macOS 26", "description": "A free Spotlight alternative for Mac that searches menu commands, open windows, menu bar icons, files and folders from one shortcut.", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}, "downloadUrl": "https://github.com/patrickfreyer/JumpKey/releases/latest/download/JumpKey.zip", "license": "https://opensource.org/licenses/MIT"}, {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Is there a free Spotlight alternative for Mac?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. JumpKey is free and open source under the MIT license. Press Option-Space in any app to search its menu commands, your open windows, menu bar icons, and your files and folders."}}, {"@type": "Question", "name": "How do I search menus on a Mac?", "acceptedAnswer": {"@type": "Answer", "text": "macOS has a search field in each app's Help menu (Shift-Command-/), but it only searches one app at a time and you reach it with the mouse or that shortcut. JumpKey searches the menus of the app in front from one shortcut, matches loosely, and puts the commands you use most first."}}, {"@type": "Question", "name": "How do I quickly find a file or folder on Mac?", "acceptedAnswer": {"@type": "Answer", "text": "Press Option-Space, press Tab until Files is selected, and type part of the name. JumpKey ranks results by how often and how recently you open them. Return opens the file or folder; Command-Return shows a file in Finder or opens a folder in Terminal."}}, {"@type": "Question", "name": "Is JumpKey a replacement for Raycast or Alfred?", "acceptedAnswer": {"@type": "Answer", "text": "Partly. JumpKey is lighter: it searches menus, windows, menu bar icons, files and folders. It has no clipboard history, snippets or extensions. If you use Alfred or Raycast mainly for menu search and jumping to folders, JumpKey covers that for free."}}, {"@type": "Question", "name": "Which macOS versions does JumpKey support?", "acceptedAnswer": {"@type": "Answer", "text": "macOS 26 or later. Plain-English search needs Apple Intelligence turned on, because it uses Apple's on-device model."}}, {"@type": "Question", "name": "Does JumpKey send my data anywhere?", "acceptedAnswer": {"@type": "Answer", "text": "No. JumpKey has no account and no analytics, and it makes no network requests. It needs Accessibility permission to read and click menus, and you choose whether it may search your Desktop, Documents and Downloads."}}]}]</script>
 </head>
 <body>
 
 <nav>
   <div class="wrap">
-    <a class="brand" href="#"><img src="icon-256.png" alt="">MenuKey</a>
+    <a class="brand" href="#"><img src="icon-256.png" alt="">JumpKey</a>
     <div class="links">
-      <a class="hide-s" href="#folders">Folders</a>
+      <a class="hide-s" href="#folders">Files</a>
       <a class="hide-s" href="#features">Features</a>
       <a class="hide-s" href="#install">Install</a>
-      <a class="hide-s" href="https://github.com/patrickfreyer/MenuKey">GitHub</a>
-      <a class="btn" href="https://github.com/patrickfreyer/MenuKey/releases/latest/download/MenuKey.zip">Download</a>
+      <a class="hide-s" href="https://github.com/patrickfreyer/JumpKey">GitHub</a>
+      <a class="btn" href="https://github.com/patrickfreyer/JumpKey/releases/latest/download/JumpKey.zip">Download</a>
     </div>
   </div>
 </nav>
 
 <header class="hero wrap">
-  <img class="icon" src="icon-256.png" alt="MenuKey app icon">
-  <h1>Every menu command,<br>one shortcut away.</h1>
-  <p class="lead">MenuKey is a free, tiny Mac app. Press <span class="nw"><kbd>⌥</kbd> <kbd>Space</kbd></span> in any app, type a few letters, and run any menu command or jump straight to any folder. It also finds open windows and menu bar icons.</p>
+  <img class="icon" src="icon-256.png" alt="JumpKey app icon">
+  <h1>A free Spotlight alternative<br>for menus, files and folders.</h1>
+  <p class="lead">Press <span class="nw"><kbd>⌥</kbd> <kbd>Space</kbd></span> in any app and start typing. JumpKey searches that app's menu commands, your open windows, the icons in your menu bar, and your files and folders. Press Return and you're there.</p>
   <div class="cta">
-    <a class="btn" href="https://github.com/patrickfreyer/MenuKey/releases/latest/download/MenuKey.zip">
+    <a class="btn" href="https://github.com/patrickfreyer/JumpKey/releases/latest/download/JumpKey.zip">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12m0 0-5-5m5 5 5-5M5 20h14"/></svg>
       Download for Mac
     </a>
-    <a class="btn ghost" href="https://github.com/patrickfreyer/MenuKey">View on GitHub</a>
+    <a class="btn ghost" href="https://github.com/patrickfreyer/JumpKey">View on GitHub</a>
   </div>
-  <p class="meta">Version 1.1 · 900 KB · macOS 26 or later · Free and open source</p>
+  <p class="meta">Version 1.2 · 910 KB · macOS 26 or later · Free and open source</p>
 
   <div class="stage-outer">
-    <div class="stage-box" id="stageBox" aria-label="Animated demo of MenuKey">
+    <div class="stage-box" id="stageBox" aria-label="Animated demo of JumpKey">
       <div class="stage" id="stage">
         <div class="mbar"><div class="apple"></div><b id="mApp">Safari</b><span id="mMenus"></span>
           <div class="right"><img src="icon-256.png" alt=""><span>Tue 9:41</span></div></div>
@@ -258,23 +266,23 @@
 <section id="folders" class="wrap">
   <div class="split">
     <div>
-      <p class="eyebrow">Folder search</p>
-      <h2>Get to any folder in a few keystrokes.</h2>
-      <p class="sub2">Spotlight searches everything, so the folder you want sits between documents, apps, settings and web suggestions. MenuKey searches only folders, and it learns where you go.</p>
+      <p class="eyebrow">Files and folders</p>
+      <h2>Find any file or folder faster than Spotlight.</h2>
+      <p class="sub2">Spotlight searches everything, so the file you want sits between apps, settings, web suggestions and Siri knowledge. JumpKey searches only your files and folders, and it learns where you go.</p>
       <ul class="checks">
-        <li><span><b>Type any part of the name.</b> <code>inv</code> finds <em>Invoices</em>, even three folders deep.</span></li>
-        <li><span><b>Your usual folders come first.</b> MenuKey ranks folders by how often and how recently you open them.</span></li>
-        <li><span><b>Open it where you need it.</b> <kbd>↩</kbd> opens Finder, <kbd>⌘</kbd> <kbd>↩</kbd> opens Terminal or your favourite terminal app.</span></li>
-        <li><span><b>Works from any app.</b> Press <span class="nw"><kbd>⌥</kbd> <kbd>Space</kbd></span>, then <kbd>Tab</kbd> to <em>Folders</em>.</span></li>
+        <li><span><b>Type any part of the name.</b> <code>inv</code> finds the <em>Invoices</em> folder and <em>invoice-march.pdf</em>, however deep they are.</span></li>
+        <li><span><b>What you use comes first.</b> JumpKey ranks results by how often and how recently you open them.</span></li>
+        <li><span><b>Open it where you need it.</b> <kbd>↩</kbd> opens a file in its app or a folder in Finder. <kbd>⌘</kbd> <kbd>↩</kbd> shows a file in Finder or opens a folder in Terminal.</span></li>
+        <li><span><b>Works from any app.</b> Press <span class="nw"><kbd>⌥</kbd> <kbd>Space</kbd></span>, then <kbd>Tab</kbd> to <em>Files</em>.</span></li>
       </ul>
-      <p class="aside">Already use <a href="https://github.com/ajeetdsouza/zoxide">zoxide</a> in the terminal? MenuKey reads its history and adds every jump back, so both get smarter. Type <code>z</code> and a space to go straight to folders.</p>
+      <p class="aside">Already use <a href="https://github.com/ajeetdsouza/zoxide">zoxide</a> in the terminal? JumpKey reads its history and adds every jump back, so both get smarter. Type <code>z</code> and a space to go straight to folders.</p>
     </div>
-    <div class="folder-stage" aria-label="MenuKey folder search showing results for inv">
+    <div class="folder-stage" aria-label="JumpKey folder search showing results for inv">
       <div class="panel">
         <div class="p-head"><div class="aicon" style="background:linear-gradient(160deg,#7fd3ff,#1e7bff)"></div><div class="q">inv<span class="caret"></span></div></div>
-        <div class="chips"><div class="chip">All</div><div class="chip">Menus</div><div class="chip">Windows</div><div class="chip">Menu Bar</div><div class="chip on">Folders</div></div>
+        <div class="chips"><div class="chip">All</div><div class="chip">Menus</div><div class="chip">Windows</div><div class="chip">Menu Bar</div><div class="chip on">Files</div></div>
         <div class="p-div"></div>
-        <div class="list"><div class="row sel" style="animation:none"><div class="ico"><svg viewBox="0 0 28 28"><path d="M3 8a2 2 0 0 1 2-2h6l2.5 2.5H23a2 2 0 0 1 2 2V21a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="#5ab4f5"/><path d="M3 11h22v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="#7cc8fb"/></svg></div><div><div class="t"><span class="hl">Inv</span>oices</div><div class="p">~/Documents/Finance</div></div><div class="k">⌘↩ Terminal</div></div><div class="row" style="animation:none"><div class="ico"><svg viewBox="0 0 28 28"><path d="M3 8a2 2 0 0 1 2-2h6l2.5 2.5H23a2 2 0 0 1 2 2V21a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="#5ab4f5"/><path d="M3 11h22v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="#7cc8fb"/></svg></div><div><div class="t"><span class="hl">Inv</span>estor updates</div><div class="p">~/Dropbox/Company</div></div></div><div class="row" style="animation:none"><div class="ico"><svg viewBox="0 0 28 28"><path d="M3 8a2 2 0 0 1 2-2h6l2.5 2.5H23a2 2 0 0 1 2 2V21a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="#5ab4f5"/><path d="M3 11h22v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="#7cc8fb"/></svg></div><div><div class="t"><span class="hl">Inv</span>oices 2025</div><div class="p">~/Documents/Finance/Archive</div></div></div><div class="row" style="animation:none"><div class="ico"><svg viewBox="0 0 28 28"><path d="M3 8a2 2 0 0 1 2-2h6l2.5 2.5H23a2 2 0 0 1 2 2V21a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="#5ab4f5"/><path d="M3 11h22v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="#7cc8fb"/></svg></div><div><div class="t"><span class="hl">Inv</span>entory photos</div><div class="p">~/Pictures/Shop</div></div></div></div>
+        <div class="list"><div class="row sel" style="animation:none"><div class="ico"><svg viewBox="0 0 28 28"><path d="M3 8a2 2 0 0 1 2-2h6l2.5 2.5H23a2 2 0 0 1 2 2V21a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="#5ab4f5"/><path d="M3 11h22v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="#7cc8fb"/></svg></div><div><div class="t"><span class="hl">Inv</span>oices</div><div class="p">~/Documents/Finance</div></div><div class="k">⌘↩ Terminal</div></div><div class="row" style="animation:none"><div class="ico"><svg viewBox="0 0 28 28"><path d="M7 3h10l5 5v16a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" fill="#fff" stroke="#c9ced8"/><path d="M17 3v5h5" fill="#e9ecf2" stroke="#c9ced8"/><rect x="9" y="15" width="10" height="5" rx="1" fill="#e5484d"/></svg></div><div><div class="t"><span class="hl">inv</span>oice-march.pdf</div><div class="p">~/Documents/Finance</div></div></div><div class="row" style="animation:none"><div class="ico"><svg viewBox="0 0 28 28"><path d="M3 8a2 2 0 0 1 2-2h6l2.5 2.5H23a2 2 0 0 1 2 2V21a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="#5ab4f5"/><path d="M3 11h22v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="#7cc8fb"/></svg></div><div><div class="t"><span class="hl">Inv</span>entory photos</div><div class="p">~/Pictures/Shop</div></div></div></div>
       </div>
     </div>
   </div>
@@ -282,22 +290,22 @@
 
 <section id="features" class="wrap">
   <h2>More than menu search.</h2>
-  <p class="sub2">A command palette for every Mac app: one panel for the commands, windows, menu bar icons and folders you reach for all day. Press <kbd>Tab</kbd> to narrow it down.</p>
+  <p class="sub2">One panel for the commands, windows, menu bar icons, files and folders you reach for all day. Press <kbd>Tab</kbd> to narrow it down.</p>
   <div class="grid">
     <div class="card">
       <div class="fi" style="background:linear-gradient(160deg,#7cc8fb,#2f8fe6)"><svg viewBox="0 0 24 24" fill="#fff"><path d="M3 7a2 2 0 0 1 2-2h4.5l2 2H19a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>
-      <h3>Folders, faster than Spotlight</h3>
-      <p>Type a few letters of any folder's name and open it in Finder or Terminal. The folders you use most come first.</p>
+      <h3>Files and folders, faster than Spotlight</h3>
+      <p>Type a few letters of any file or folder name and open it. The ones you use most come first.</p>
     </div>
     <div class="card">
       <div class="fi" style="background:linear-gradient(160deg,#5a94ff,#2c63f5)"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 9h7M7 13h10M7 17h5"/></svg></div>
       <h3>Every menu, searchable</h3>
-      <p>MenuKey reads the frontmost app's menus, submenus included, in 30–80 ms. Each result shows its keyboard shortcut, so you learn them as you go.</p>
+      <p>JumpKey reads the frontmost app's menus, submenus included, in 30–80 ms. Each result shows its keyboard shortcut, so you learn them as you go.</p>
     </div>
     <div class="card">
       <div class="fi" style="background:linear-gradient(160deg,#ffb547,#f07b1f)"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M4 18l5-6 4 3 7-9"/><path d="M15 6h5v5"/></svg></div>
       <h3>Learns like zoxide</h3>
-      <p>Commands you use often and recently rise to the top. MenuKey also remembers what you typed: if <code>t</code> always ends in <em>New Tab</em>, <code>t</code> puts it first.</p>
+      <p>Commands you use often and recently rise to the top. JumpKey also remembers what you typed: if <code>t</code> always ends in <em>New Tab</em>, <code>t</code> puts it first.</p>
     </div>
     <div class="card">
       <div class="fi" style="background:linear-gradient(160deg,#c56cff,#7a3cf0)"><svg viewBox="0 0 24 24" fill="#fff"><path d="M12 2l2.2 6.3L20.5 11l-6.3 2.7L12 20l-2.2-6.3L3.5 11l6.3-2.7z"/></svg></div>
@@ -322,7 +330,7 @@
   <h2>Built for the keyboard.</h2>
   <p class="sub2">And for touch: every row and filter is a large target you can tap.</p>
   <div class="keys">
-    <div><span class="kk"><kbd>⌥</kbd><kbd>Space</kbd></span>Open or close MenuKey. You can pick another shortcut.</div>
+    <div><span class="kk"><kbd>⌥</kbd><kbd>Space</kbd></span>Open or close JumpKey. You can pick another shortcut.</div>
     <div><span class="kk"><kbd>↑</kbd><kbd>↓</kbd></span>Move the selection</div>
     <div><span class="kk"><kbd>Tab</kbd></span>Switch between All, Menus, Windows, Menu Bar and Folders</div>
     <div><span class="kk"><kbd>↩</kbd></span>Run the selected item</div>
@@ -337,32 +345,44 @@
   <div class="two">
     <div class="card">
       <h3>Stays on your Mac</h3>
-      <p>MenuKey has no account and no analytics, and makes no network requests. It needs Accessibility permission to read and click menus. Your usage history is one small file in <code>~/Library/Application&nbsp;Support/MenuKey</code>, and the plain-English fallback runs on Apple's on-device model.</p>
+      <p>JumpKey has no account and no analytics, and makes no network requests. It needs Accessibility permission to read and click menus. Your usage history is one small file in <code>~/Library/Application&nbsp;Support/JumpKey</code>, and the plain-English fallback runs on Apple's on-device model.</p>
     </div>
     <div class="card">
       <h3>Install in a minute</h3>
       <ol class="steps" style="margin-top:14px">
-        <li><b>Download MenuKey</b>, unzip it, and move it to Applications.</li>
-        <li><b>Open it.</b> MenuKey isn't notarized yet, so the first time, click <em>Open Anyway</em> in System Settings › Privacy &amp; Security.</li>
+        <li><b>Download JumpKey</b>, unzip it, and move it to Applications.</li>
+        <li><b>Open it.</b> JumpKey isn't notarized yet, so the first time, click <em>Open Anyway</em> in System Settings › Privacy &amp; Security.</li>
         <li><b>Allow it under Accessibility</b> when asked. From then on it starts at login.</li>
       </ol>
     </div>
   </div>
 </section>
 
+<section id="faq" class="wrap">
+  <h2>Questions</h2>
+  <div class="faq">
+    <details><summary>Is there a free Spotlight alternative for Mac?</summary><p>Yes. JumpKey is free and open source under the MIT license. Press Option-Space in any app to search its menu commands, your open windows, menu bar icons, and your files and folders.</p></details>
+    <details><summary>How do I search menus on a Mac?</summary><p>macOS has a search field in each app's Help menu (Shift-Command-/), but it only searches one app at a time and you reach it with the mouse or that shortcut. JumpKey searches the menus of the app in front from one shortcut, matches loosely, and puts the commands you use most first.</p></details>
+    <details><summary>How do I quickly find a file or folder on Mac?</summary><p>Press Option-Space, press Tab until Files is selected, and type part of the name. JumpKey ranks results by how often and how recently you open them. Return opens the file or folder; Command-Return shows a file in Finder or opens a folder in Terminal.</p></details>
+    <details><summary>Is JumpKey a replacement for Raycast or Alfred?</summary><p>Partly. JumpKey is lighter: it searches menus, windows, menu bar icons, files and folders. It has no clipboard history, snippets or extensions. If you use Alfred or Raycast mainly for menu search and jumping to folders, JumpKey covers that for free.</p></details>
+    <details><summary>Which macOS versions does JumpKey support?</summary><p>macOS 26 or later. Plain-English search needs Apple Intelligence turned on, because it uses Apple's on-device model.</p></details>
+    <details><summary>Does JumpKey send my data anywhere?</summary><p>No. JumpKey has no account and no analytics, and it makes no network requests. It needs Accessibility permission to read and click menus, and you choose whether it may search your Desktop, Documents and Downloads.</p></details>
+  </div>
+</section>
+
 <section class="final wrap">
   <img src="icon-256.png" alt="" width="72" height="72">
-  <h2 style="margin-top:16px">Stop hunting through menus.</h2>
+  <h2 style="margin-top:16px">Stop hunting through menus and folders.</h2>
   <div class="cta">
-    <a class="btn" href="https://github.com/patrickfreyer/MenuKey/releases/latest/download/MenuKey.zip">Download for Mac</a>
-    <a class="btn ghost" href="https://github.com/patrickfreyer/MenuKey">Source on GitHub</a>
+    <a class="btn" href="https://github.com/patrickfreyer/JumpKey/releases/latest/download/JumpKey.zip">Download for Mac</a>
+    <a class="btn ghost" href="https://github.com/patrickfreyer/JumpKey">Source on GitHub</a>
   </div>
 </section>
 
 <footer>
   <div class="wrap">
-    <span>MenuKey is free and open source under the MIT license.</span>
-    <span>Made by Patrick Freyer · <a href="https://github.com/patrickfreyer/MenuKey">GitHub</a> · <a href="https://github.com/patrickfreyer/MenuKey/releases">Releases</a></span>
+    <span>JumpKey is free and open source under the MIT license.</span>
+    <span>Made by Patrick Freyer · <a href="https://github.com/patrickfreyer/JumpKey">GitHub</a> · <a href="https://github.com/patrickfreyer/JumpKey/releases">Releases</a></span>
   </div>
 </footer>
 
@@ -374,6 +394,7 @@
     mail: `<svg viewBox="0 0 28 28"><rect x="2" y="2" width="24" height="24" rx="6" fill="#2f8fe6"/><path d="M7 10h14v9H7z" fill="#fff"/><path d="M7 10l7 5 7-5" fill="none" stroke="#2f8fe6" stroke-width="1.5"/></svg>`,
     notes: `<svg viewBox="0 0 28 28"><rect x="2" y="2" width="24" height="24" rx="6" fill="#ffd84a"/><rect x="2" y="2" width="24" height="7" rx="6" fill="#f5c400"/><path d="M7 14h14M7 18h10" stroke="#a88a00" stroke-width="1.6" stroke-linecap="round"/></svg>`,
     wifi: `<svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 11a13 13 0 0 1 18 0M8.5 14.5a8 8 0 0 1 11 0M12 18a3 3 0 0 1 4 0"/></svg>`,
+    doc: `<svg viewBox="0 0 28 28"><path d="M7 3h10l5 5v16a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" fill="#fff" stroke="#c9ced8"/><path d="M17 3v5h5" fill="#e9ecf2" stroke="#c9ced8"/><rect x="9" y="15" width="10" height="5" rx="1" fill="#e5484d"/></svg>`,
     spark: `<svg viewBox="0 0 28 28"><path d="M14 4l2.2 6.3L22 13l-5.8 2.7L14 22l-2.2-6.3L6 13l5.8-2.7z" fill="currentColor"/></svg>`,
   };
   const scenes = [
@@ -381,8 +402,8 @@
       query: "tab", scope: 0, caption: "Type a few letters to find any menu command.",
       rows: [["menu","New Tab","File","⌘T"],["menu","Show All Tabs","View","⇧⌘\\"],["menu","Reopen Last Closed Tab","History","⇧⌘T"],["menu","Close Other Tabs","File","⌥⌘W"]] },
     { app: "Finder", menus: "File Edit View Go Window Help", icon: "linear-gradient(160deg,#7fd3ff,#1e7bff)",
-      query: "inv", scope: 4, caption: "Jump to any folder. The ones you use most come first.",
-      rows: [["folder","Invoices","~/Documents/Finance","⌘↩ Terminal"],["folder","Investor updates","~/Dropbox/Company",""],["folder","Invoices 2025","~/Documents/Finance/Archive",""]] },
+      query: "inv", scope: 4, caption: "Find any file or folder. The ones you use most come first.",
+      rows: [["folder","Invoices","~/Documents/Finance","⌘↩ Terminal"],["folder","Investor updates","~/Dropbox/Company",""],["doc","invoice-march.pdf","~/Documents/Finance",""]] },
     { app: "Preview", menus: "File Edit View Go Tools Window Help", icon: "linear-gradient(160deg,#a6e3ff,#3c9df0)",
       query: "make it bigger", scope: 0, ai: true, caption: "No match? Apple's on-device model works out what you meant.",
       rows: [["spark","Zoom In","Suggested · View","⌘+"],["spark","Zoom to Fit","Suggested · View","⌘9"]] },
@@ -393,7 +414,7 @@
       query: "wi", scope: 3, caption: "Open any menu bar icon by name.",
       rows: [["wifi","Wi‑Fi","Menu bar · connected",""]] },
   ];
-  const chipsNames = ["All", "Menus", "Windows", "Menu Bar", "Folders"];
+  const chipsNames = ["All", "Menus", "Windows", "Menu Bar", "Files"];
   const $ = (id) => document.getElementById(id);
   const stage = $("stage"), box = $("stageBox");
   const fit = () => { stage.style.transform = `scale(${box.clientWidth / 820})`; };

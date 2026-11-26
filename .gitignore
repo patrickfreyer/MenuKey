@@ -6,3 +6,4 @@ build/
 .claude/
 .wrangler/
 site-dist/
+seo/

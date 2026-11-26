@@ -1,4 +1,4 @@
-// Draws the MenuKey app icon.
+// Draws the JumpKey app icon.
 //   swift Scripts/make-icon.swift            -> Resources/AppIcon.icns + Resources/AppIcon.png (variant B)
 //   swift Scripts/make-icon.swift A|B|C      -> same, for that variant
 //   swift Scripts/make-icon.swift sheet <out.png>   -> side-by-side comparison of all variants
@@ -114,7 +114,7 @@ func drawA(_ ctx: CGContext) {
     fill(ctx, rounded(CGRect(x: 330, y: 400, width: 240, height: 30), 15), rgb(0x2A2350, 0.18))
 }
 
-// MARK: - Variant B: light utility, a tiny MenuKey panel
+// MARK: - Variant B: light utility, a tiny JumpKey panel
 
 func drawB(_ ctx: CGContext) {
     let t = tileBase(ctx, top: 0xFDFDFF, bottom: 0xD5DBE8, highlight: 0.0)
