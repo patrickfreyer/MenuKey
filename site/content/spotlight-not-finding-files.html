@@ -1,0 +1,44 @@
+  <p class="lead">When Spotlight stops finding files or apps, the cause is almost always one of three things: the index is still rebuilding after a macOS update, the folder is excluded in Spotlight's settings, or the index is damaged. Work through the fixes below in order; the first two take a minute, and rebuilding the index fixes the rest.</p>
+
+  <h2>1. Check whether Spotlight is still indexing</h2>
+  <p>After a macOS update or a migration, Spotlight rebuilds its index in the background, and results stay incomplete until it finishes. Open Spotlight with <kbd>⌘</kbd> <kbd>Space</kbd> and search for something: if it's indexing, you'll see a progress message. You can also check in Terminal:</p>
+  <pre><code>mdutil -s /        # "Indexing enabled." is what you want to see</code></pre>
+  <p>If it's indexing, leave your Mac on and plugged in for an hour or two before trying anything else.</p>
+
+  <h2>2. Check Spotlight's result settings</h2>
+  <p>Open System Settings › Spotlight and make sure the kinds of results you're missing, such as Documents, Folders or Applications, are switched on. A category that's off disappears from every search.</p>
+
+  <h2>3. Check Search Privacy</h2>
+  <p>In System Settings › Spotlight, click <b>Search Privacy</b>. Any folder or disk listed there is never indexed. Select a folder you need and click <b>−</b> to remove it.</p>
+
+  <h2>4. Rebuild the index from Settings</h2>
+  <p>Adding your disk to Search Privacy and removing it again makes Spotlight rebuild its index from scratch:</p>
+  <ol>
+    <li>Open System Settings › Spotlight › Search Privacy.</li>
+    <li>Click <b>+</b>, choose your startup disk (usually Macintosh HD), and confirm.</li>
+    <li>Wait a few seconds, select the disk in the list, and click <b>−</b>.</li>
+  </ol>
+  <p>Indexing starts again and can take from minutes to a few hours, depending on how many files you have.</p>
+
+  <h2>5. Rebuild the index from Terminal</h2>
+  <p>If the Settings route doesn't help, erase and rebuild the index for your startup disk. You'll be asked for your password:</p>
+  <pre><code>sudo mdutil -E /       # erase the index; Spotlight rebuilds it
+sudo mdutil -i on /    # make sure indexing is on</code></pre>
+
+  <h2>6. Restart and update macOS</h2>
+  <p>A restart clears a stuck indexing process. People have reported Spotlight missing installed apps after macOS updates, including during the macOS 26 betas, so install the latest update from System Settings › General › Software Update.</p>
+
+  <h2>7. Check Finder's search scope</h2>
+  <p>If the problem is Finder search rather than Spotlight, open Finder › Settings › Advanced. <b>When performing a search</b> decides whether Finder searches the whole Mac or only the current folder. A search limited to the current folder looks broken when the file is somewhere else.</p>
+
+  <h2>Find files while Spotlight rebuilds</h2>
+  <p>Until the index is back, find files by path instead of by search. In Finder, press <kbd>⇧</kbd> <kbd>⌘</kbd> <kbd>G</kbd> and type a path such as <code>~/Documents</code>, using <kbd>Tab</kbd> to complete names. Or, in Terminal, <code>find ~ -iname "*invoice*"</code> searches without the index (slowly).</p>
+  <p>Launchers that read Spotlight's index, including Alfred, Raycast's file search and <a href="/">JumpKey</a>, are affected by the same problem, so fix the index first. JumpKey's folder results from zoxide don't depend on Spotlight. For everyday tips, see <a href="/find-files-on-mac/">how to find a file or folder on Mac</a>.</p>
+
+  <h2>Questions</h2>
+  <details><summary>How long does Spotlight take to reindex?</summary>
+    <p>Usually from a few minutes to a few hours, depending on how many files your Mac has. Leave it on and plugged in.</p></details>
+  <details><summary>Why does Spotlight show apps but not my documents?</summary>
+    <p>Check that Documents is switched on in System Settings › Spotlight, and that the folder isn't listed under Search Privacy. If both are fine, rebuild the index.</p></details>
+  <details><summary>Is it safe to rebuild the Spotlight index?</summary>
+    <p>Yes. Rebuilding only recreates Spotlight's search database. Your files aren't touched, but search results are incomplete until indexing finishes.</p></details>

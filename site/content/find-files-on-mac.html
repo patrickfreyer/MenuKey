@@ -1,0 +1,60 @@
+  <p class="lead">The fastest way to find a file on a Mac is Spotlight: press <kbd>⌘</kbd> <kbd>Space</kbd>, type part of the name, and press Return. If you know roughly where it is, Finder search or Go to Folder is quicker. If you open the same folders every day, a launcher that learns them gets you there in two or three letters.</p>
+
+  <div class="answer">
+    <p><b>Quick answer:</b> <kbd>⌘</kbd> <kbd>Space</kbd> and type the name (Spotlight). In macOS 26, press <kbd>⌘</kbd> <kbd>2</kbd> in Spotlight to see files only. In Finder, <kbd>⌘</kbd> <kbd>F</kbd> searches with filters, and <kbd>⇧</kbd> <kbd>⌘</kbd> <kbd>G</kbd> jumps to a path you type.</p>
+  </div>
+
+  <h2>1. Spotlight: search the whole Mac by name</h2>
+  <p>Spotlight searches file names, the text inside documents, apps and settings. Press <kbd>⌘</kbd> <kbd>Space</kbd> and type a few letters of the name. Use the arrow keys to pick a result, then:</p>
+  <ul>
+    <li><kbd>↩</kbd> opens the file.</li>
+    <li><kbd>⌘</kbd> <kbd>↩</kbd> shows it in Finder, so you can see which folder it lives in.</li>
+    <li><kbd>⌘</kbd> <kbd>2</kbd> (macOS 26 and later) switches Spotlight to its Files view, which hides apps, actions and web suggestions.</li>
+  </ul>
+  <p>You can narrow a search with a kind: <code>kind:pdf invoice</code> finds PDFs with "invoice" in the name or text, and <code>kind:folder projects</code> finds folders only.</p>
+
+  <h2>2. Finder search: filter by kind, date and place</h2>
+  <p>Open a Finder window and press <kbd>⌘</kbd> <kbd>F</kbd>. Type the name, then choose whether to search <b>This Mac</b> or only the folder you're in. Click <b>+</b> under the search bar to add filters, such as Kind is PDF, or Last opened date is within the last week.</p>
+  <p>To make every Finder search start in the current folder, open Finder › Settings › Advanced and set <b>When performing a search</b> to <b>Search the Current Folder</b>.</p>
+
+  <h2>3. Go to Folder: jump straight to a path</h2>
+  <p>In Finder, press <kbd>⇧</kbd> <kbd>⌘</kbd> <kbd>G</kbd> and type a path such as <code>~/Documents/Finance</code>. Press <kbd>Tab</kbd> to complete folder names as you type. This is the quickest way into folders Spotlight hides, such as <code>~/Library</code>.</p>
+
+  <h2>4. Recents and recent folders</h2>
+  <p>If you used the file lately, you may not need to search at all. <b>Recents</b> in the Finder sidebar lists files you opened recently. For folders, open the Finder menu bar and choose <b>Go › Recent Folders</b>.</p>
+
+  <h2>5. Terminal: search by name from the command line</h2>
+  <p>Terminal can query the same Spotlight index, which is handy in scripts or when you want plain paths:</p>
+  <pre><code>mdfind -name invoice                 # names containing "invoice", from Spotlight's index
+mdfind -onlyin ~/Documents "kind:pdf"   # PDFs in Documents
+find ~ -iname "*invoice*" 2&gt;/dev/null   # slow, but works without the index</code></pre>
+  <p>If you live in the terminal, <a href="https://github.com/ajeetdsouza/zoxide">zoxide</a> learns the folders you visit, so <code>z fin</code> jumps to <code>~/Documents/Finance</code> after a few visits.</p>
+
+  <h2>6. A launcher that learns your folders</h2>
+  <p>Spotlight ranks results the same way whether you opened a folder once or every day. <a href="/">JumpKey</a>, a free and open-source launcher, ranks files and folders by <b>frecency</b>: how often and how recently you open them. Press <kbd>⌥</kbd> <kbd>Space</kbd>, press <kbd>Tab</kbd> to <b>Files</b>, and type a few letters.</p>
+  <ul>
+    <li><kbd>↩</kbd> opens a file in its app, or a folder in Finder.</li>
+    <li><kbd>⌘</kbd> <kbd>↩</kbd> shows a file in Finder, or opens a folder in Terminal or your favourite terminal app.</li>
+    <li>It reads zoxide's history too, and adds every folder you open back to it.</li>
+  </ul>
+  <p>JumpKey uses Spotlight's index for file names, so if Spotlight is missing files, fix that first: see <a href="/spotlight-not-finding-files/">Spotlight not finding files</a>.</p>
+
+  <h2>Which way should you use?</h2>
+  <div class="table-wrap"><table>
+    <tr><th>You want to</th><th>Use</th><th>Shortcut</th></tr>
+    <tr><td>Find a file by name anywhere</td><td>Spotlight</td><td><kbd>⌘</kbd> <kbd>Space</kbd></td></tr>
+    <tr><td>Filter by kind or date</td><td>Finder search</td><td><kbd>⌘</kbd> <kbd>F</kbd></td></tr>
+    <tr><td>Open a folder whose path you know</td><td>Go to Folder</td><td><kbd>⇧</kbd> <kbd>⌘</kbd> <kbd>G</kbd></td></tr>
+    <tr><td>Get back to something from today</td><td>Recents, Go › Recent Folders</td><td>sidebar</td></tr>
+    <tr><td>Jump to folders you use every day</td><td>JumpKey or zoxide</td><td><kbd>⌥</kbd> <kbd>Space</kbd>, <code>z</code></td></tr>
+  </table></div>
+
+  <h2>Questions</h2>
+  <details><summary>Why can't Spotlight find a file I know is on my Mac?</summary>
+    <p>Usually the folder is excluded under Spotlight's Search Privacy settings, the index is still building after an update, or the index is damaged. The fixes are in our guide to Spotlight not finding files.</p></details>
+  <details><summary>How do I search for folders only on a Mac?</summary>
+    <p>In Spotlight, type kind:folder followed by part of the name. In Finder search, add the filter Kind is Folder. In JumpKey, type z and a space before the name.</p></details>
+  <details><summary>How do I find where a file is saved on a Mac?</summary>
+    <p>Select it in Spotlight and press Command-Return to show it in Finder. In a Finder window, choose View › Show Path Bar to see the full path at the bottom.</p></details>
+  <details><summary>How do I find recently opened files on a Mac?</summary>
+    <p>Click Recents in the Finder sidebar, or open the Apple menu and choose Recent Items. For folders, use Go › Recent Folders in Finder.</p></details>

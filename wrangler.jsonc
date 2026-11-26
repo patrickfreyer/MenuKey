@@ -4,7 +4,7 @@
   "name": "jumpkey",
   "compatibility_date": "2026-11-20",
   "account_id": "116092b8ab67eb99b520552e6655f045",
-  "assets": { "directory": "./site-dist" },
+  "assets": { "directory": "./site-dist", "not_found_handling": "404-page" },
   // Custom domain on the patrickfreyer.com zone: Cloudflare creates the DNS record and certificate.
   "routes": [{ "pattern": "jumpkey.patrickfreyer.com", "custom_domain": true }]
 }

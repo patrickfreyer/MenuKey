@@ -154,11 +154,17 @@
   .folder-stage { border-radius: 22px; padding: 28px 22px; background: var(--stage); border: 1px solid var(--line);
                   box-shadow: 0 24px 60px rgba(0,0,0,.14); }
   .folder-stage .panel { position: relative; left: auto; top: auto; width: 100%; }
+  .split > *, .two > *, .grid > * { min-width: 0; }
+  code { overflow-wrap: anywhere; }
+  .folder-stage .chips { flex-wrap: wrap; row-gap: 6px; }
   .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 40px; }
   .card { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 26px; }
   .card .fi { width: 40px; height: 40px; border-radius: 11px; display: flex; align-items: center; justify-content: center;
               margin-bottom: 16px; color: #fff; }
   .card .fi svg { width: 22px; height: 22px; }
+  a.card.guide { color: inherit; display: block; }
+  a.card.guide:hover { text-decoration: none; border-color: var(--accent); }
+  a.card.guide h3 { color: var(--accent); }
   .card h3 { font-size: 18px; letter-spacing: -0.01em; margin-bottom: 6px; }
   .card p { color: var(--sub); font-size: 15px; }
   code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: .92em; background: var(--pill);
@@ -194,7 +200,7 @@
   @media (max-width: 860px) {
     .grid { grid-template-columns: 1fr 1fr; }
     .two { grid-template-columns: 1fr; }
-    .split { grid-template-columns: 1fr; gap: 32px; }
+    .split { grid-template-columns: minmax(0, 1fr); gap: 32px; }
   }
   @media (max-width: 600px) {
     .wrap { padding: 0 16px; }
@@ -222,7 +228,7 @@
     <div class="links">
       <a class="hide-s" href="#folders">Files</a>
       <a class="hide-s" href="#features">Features</a>
-      <a class="hide-s" href="#install">Install</a>
+      <a class="hide-s" href="/guides/">Guides</a>
       <a class="hide-s" href="https://github.com/patrickfreyer/JumpKey">GitHub</a>
       <a class="btn" href="https://github.com/patrickfreyer/JumpKey/releases/latest/download/JumpKey.zip">Download</a>
     </div>
@@ -320,7 +326,7 @@
     <div class="card">
       <div class="fi" style="background:linear-gradient(160deg,#8e9aaf,#5b667a)"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M2 8.5a15 15 0 0 1 20 0M5.5 12a10 10 0 0 1 13 0M9 15.5a5 5 0 0 1 6 0"/><circle cx="12" cy="19" r="1.3" fill="#fff"/></svg></div>
       <h3>Menu bar icons</h3>
-      <p>Open Wi‑Fi, Battery, Control Center or any app's menu bar icon by typing its name, even when it's hidden behind the notch.</p>
+      <p>Open Wi‑Fi, Battery, Control Center or any app's menu bar icon by typing its name.</p>
     </div>
 </div>
   </div>
@@ -345,7 +351,7 @@
   <div class="two">
     <div class="card">
       <h3>Stays on your Mac</h3>
-      <p>JumpKey has no account and no analytics, and makes no network requests. It needs Accessibility permission to read and click menus. Your usage history is one small file in <code>~/Library/Application&nbsp;Support/JumpKey</code>, and the plain-English fallback runs on Apple's on-device model.</p>
+      <p>JumpKey has no account and no analytics, and makes no network requests. It needs Accessibility permission to read and click menus. Your usage history is one small file in <code>~/Library/Application Support/JumpKey</code>, and the plain-English fallback runs on Apple's on-device model.</p>
     </div>
     <div class="card">
       <h3>Install in a minute</h3>
@@ -370,6 +376,19 @@
   </div>
 </section>
 
+<section id="guides" class="wrap">
+  <h2>Guides</h2>
+  <p class="sub2">Getting more out of search on your Mac, with or without JumpKey.</p>
+  <div class="grid">
+    <a class="card guide" href="/find-files-on-mac/"><h3>How to find a file or folder on Mac</h3><p>Six ways, from Spotlight and Finder search to Go to Folder and Terminal.</p></a>
+    <a class="card guide" href="/spotlight-not-finding-files/"><h3>Spotlight not finding files?</h3><p>Check indexing and privacy settings, then rebuild the index.</p></a>
+    <a class="card guide" href="/raycast-vs-alfred/"><h3>Raycast vs Alfred vs Spotlight</h3><p>Price, file and menu search, clipboard and snippets, side by side.</p></a>
+    <a class="card guide" href="/raycast-alternative/"><h3>A free, open-source Raycast alternative</h3><p>When a lighter launcher is enough, and when it isn't.</p></a>
+    <a class="card guide" href="/alfred-alternative/"><h3>A free Alfred alternative for Mac</h3><p>What Alfred's free version covers, and where JumpKey differs.</p></a>
+  </div>
+  <p class="sub2" style="margin-top:20px"><a href="/guides/">All guides</a></p>
+</section>
+
 <section class="final wrap">
   <img src="icon-256.png" alt="" width="72" height="72">
   <h2 style="margin-top:16px">Stop hunting through menus and folders.</h2>
@@ -382,6 +401,7 @@
 <footer>
   <div class="wrap">
     <span>JumpKey is free and open source under the MIT license.</span>
+    <span><a href="/find-files-on-mac/">How to find a file or folder on Mac</a> · <a href="/spotlight-not-finding-files/">Spotlight not finding files?</a> · <a href="/raycast-vs-alfred/">Raycast vs Alfred vs Spotlight</a> · <a href="/raycast-alternative/">A free, open-source Raycast alternative</a> · <a href="/alfred-alternative/">A free Alfred alternative for Mac</a></span>
     <span>Made by Patrick Freyer · <a href="https://github.com/patrickfreyer/JumpKey">GitHub</a> · <a href="https://github.com/patrickfreyer/JumpKey/releases">Releases</a></span>
   </div>
 </footer>
